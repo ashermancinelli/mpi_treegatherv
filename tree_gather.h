@@ -17,21 +17,15 @@
  * with a performance boost from the tree
  * structure
  */
-extern void tree_gatherv_f(
-        float *sendbuf,
-        int sendcnt,
-        MPI_Datatype sendtype,
-        float *recvbuf,
-        int *recvcnts,
-        int *displs,
-        MPI_Datatype recvtype,
-        int root,
-        MPI_Comm comm
+extern void tree_gatherv_d(
+        double *sendbuf, int sendcnt, MPI_Datatype sendtype,
+        double *recvbuf, int *recvcnts, int *displs,
+        MPI_Datatype recvtype, int root, MPI_Comm comm
     );
 
 extern void my_mpi_gatherv(
-        float *sendbuf, int sendcnt,   MPI_Datatype sendtype,
-        float *recvbuf, int *recvcnts, int *displs,
+        double *sendbuf, int sendcnt,   MPI_Datatype sendtype,
+        double *recvbuf, int *recvcnts, int *displs,
         MPI_Datatype recvtype, int root, MPI_Comm comm
     );
 #if 0

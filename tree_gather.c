@@ -49,9 +49,9 @@ size_t node_data_count(
  *
  * Only gather with root = 0
  */
-void tree_gatherv_f(
-        float *sendbuf, int sendcnt,   MPI_Datatype sendtype,
-        float *recvbuf, int *recvcnts, int *displs,
+void tree_gatherv_d(
+        double * restrict sendbuf, int sendcnt,   MPI_Datatype sendtype,
+        double * restrict recvbuf, int *recvcnts, int *displs,
         MPI_Datatype recvtype, int root, MPI_Comm comm)
 {
     int i, rank, comm_size, bits=0, partner_rank;
@@ -68,7 +68,14 @@ void tree_gatherv_f(
     /*
      * Copy your local bit into the global buf
      */
-    memcpy(recvbuf + displs[rank], sendbuf, sizeof(float)*sendcnt);
+    if (recvbuf == NULL)
+    {
+        recvbuf = sendbuf;
+    }
+    else
+    {
+        memcpy(recvbuf + displs[rank], sendbuf, sizeof(double)*sendcnt);
+    }
 
     bits = num_bits(comm_size);
 
@@ -97,7 +104,7 @@ void tree_gatherv_f(
             if (partner_rank < comm_size)
             {
                 int cnt = node_data_count(partner_rank, comm_size, recvcnts, i);
-                float* _recbuf = recvbuf + displs[partner_rank];
+                double* _recbuf = recvbuf + displs[partner_rank];
 #               ifdef __DEBUG
                 fprintf(stdout, "RECIEVE %i <- %i (%i count at displ %i) on iter %i\n",
                         rank, partner_rank, cnt, displs[partner_rank], i);
@@ -129,8 +136,8 @@ void tree_gatherv_f(
 }
 
 void my_mpi_gatherv(
-        float *sendbuf, int sendcnt,   MPI_Datatype sendtype,
-        float *recvbuf, int *recvcnts, int *displs,
+        double *sendbuf, int sendcnt,   MPI_Datatype sendtype,
+        double *recvbuf, int *recvcnts, int *displs,
         MPI_Datatype recvtype, int root, MPI_Comm comm)
 {
     int i, rank, comm_size;
