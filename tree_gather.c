@@ -32,8 +32,6 @@ size_t node_data_count(
     }
     rightmost_child += rank;
 
-    fprintf(stdout, "rank %i rightmost_child %i\n", rank, rightmost_child);
-    fflush(stdout);
     for (i=rank; i<=rightmost_child; i++)
     {
         if (i >= size)
@@ -58,6 +56,8 @@ void tree_gatherv_f(
 {
     int i, rank, comm_size, bits=0, partner_rank;
 
+    assert(root == 0);
+
     // only floats for now
     UNUSED(sendtype);
     UNUSED(recvtype);
@@ -72,6 +72,7 @@ void tree_gatherv_f(
 
     bits = num_bits(comm_size);
 
+#   ifdef __DEBUG
     if (rank == root)
     {
         fprintf(stdout, "\tBits to hold world size: %i\n"
@@ -81,6 +82,7 @@ void tree_gatherv_f(
             "highest capacity for number of bits: %i\n",
             bits, 1<<bits, comm_size, (1<<bits)-comm_size);
     }
+#   endif
 
     for (i=0; i<=bits; i++)
     {
@@ -96,9 +98,11 @@ void tree_gatherv_f(
             {
                 int cnt = node_data_count(partner_rank, comm_size, recvcnts, i);
                 float* _recbuf = recvbuf + displs[partner_rank];
+#               ifdef __DEBUG
                 fprintf(stdout, "RECIEVE %i <- %i (%i count at displ %i) on iter %i\n",
                         rank, partner_rank, cnt, displs[partner_rank], i);
                 fflush(stdout);
+#               endif
 
                 MPI_Recv(_recbuf, cnt,
                         MPI_FLOAT, partner_rank, 0, comm, MPI_STATUS_IGNORE);
@@ -112,9 +116,11 @@ void tree_gatherv_f(
         else
         {
             int cnt = node_data_count(rank, comm_size, recvcnts, i);
+#           ifdef __DEBUG
             fprintf(stdout, "SEND %i -> %i (%i data at displ %i) on iter %i\n",
                     rank, partner_rank, cnt, displs[rank], i);
             fflush(stdout);
+#           endif
             MPI_Send(recvbuf + displs[rank], cnt,
                 MPI_FLOAT, partner_rank, 0, comm);
             return;
@@ -122,13 +128,19 @@ void tree_gatherv_f(
     }
 }
 
-#if 0
-void tree_gatherv_f(
+void my_mpi_gatherv(
         float *sendbuf, int sendcnt,   MPI_Datatype sendtype,
         float *recvbuf, int *recvcnts, int *displs,
         MPI_Datatype recvtype, int root, MPI_Comm comm)
 {
-    int i, rank, comm_size, bits=0, partner_rank;
+    int i, rank, comm_size;
+
+    UNUSED(recvtype);
+    UNUSED(sendtype);
+
+    MPI_Comm_rank(comm, &rank);
+    MPI_Comm_size(comm, &comm_size);
+
     /*
      * Algorithm for normal gatherv
      * 
@@ -148,4 +160,3 @@ void tree_gatherv_f(
         }
     }
 }
-#endif

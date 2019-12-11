@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <assert.h>
 
 #include "mpi.h"
 
@@ -28,6 +29,11 @@ extern void tree_gatherv_f(
         MPI_Comm comm
     );
 
+extern void my_mpi_gatherv(
+        float *sendbuf, int sendcnt,   MPI_Datatype sendtype,
+        float *recvbuf, int *recvcnts, int *displs,
+        MPI_Datatype recvtype, int root, MPI_Comm comm
+    );
 #if 0
 
 Tree-based reduce function
