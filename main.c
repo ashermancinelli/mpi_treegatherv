@@ -6,6 +6,8 @@
 
 #include "tree_gather.h"
 
+#define COUNT 3
+
 #define EXIT() \
     ({ \
         fprintf(stderr, usage); \
@@ -23,23 +25,15 @@ int main(int argc, char** argv)
     float *global_buffer;
     float *local_buffer;
     char gather_method[32];
-    int offsets[10];
-
-    // sum == 100
-    int cnts[10] =
-    {
-        10, 20, 10,
-        3,  2,  5,
-        10, 5,  5,
-        30
-    };
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    if (size != 10)
-        EXIT();
+    int *offsets = malloc(sizeof(int) * size);
+    int *cnts = malloc(sizeof(int) * size);
+    for (i=0; i<size; i++)
+        cnts[i] = COUNT;
     
     for (i=0; i<argc; i++)
     {
@@ -62,16 +56,15 @@ int main(int argc, char** argv)
     if (!rank)
     {
         fprintf(stdout, "Using gather method: %s.\n", gather_method);
-        fprintf(stdout, "Using %i procs.\n", size);
         fflush(stdout);
-
-        offsets[0] = 0;
-        for (i=1; i < 10; i++)
-            offsets[i] = offsets[i-1] + cnts[i-1];
     }
 
-    global_buffer = malloc(sizeof(float) * 100);
-    local_buffer = malloc(sizeof(float) * cnts[rank]);
+    offsets[0] = 0;
+    for (i=1; i < size; i++)
+        offsets[i] = offsets[i-1] + cnts[i-1];
+
+    global_buffer = malloc(sizeof(float) * size * COUNT);
+    local_buffer = malloc(sizeof(float) * COUNT);
     
     for (i=0; i<cnts[rank]; i++)
         local_buffer[i] = rank;
@@ -105,7 +98,7 @@ int main(int argc, char** argv)
 
     if (!rank)
     {
-        for (i=0; i<100; i++)
+        for (i=0; i<size*COUNT; i++)
         {
             fprintf(stdout, "local_buffer[%i] = %.1f\n", i, global_buffer[i]);
         }

@@ -3,7 +3,7 @@ CC = mpicc
 SRC = $(wildcard *.c)
 OBJ = $(SRC:.o=.c)
 HEADERS = $(wildcard *.h)
-CFLAGS = -O3 -Wall -Wextra -lmpi
+CFLAGS = -Wall -Wextra -lmpi
 BIN_NAME = treegather.bin
 
 .PHONY: Makfile all
