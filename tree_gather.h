@@ -4,8 +4,26 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-extern void tree_gatherv(
+#include "mpi.h"
 
+#define UNUSED(x) (void)(x)
+
+/*
+ * Same function stub as MPI_Gatherv
+ * Should function the exact same, but
+ * with a performance boost from the tree
+ * structure
+ */
+extern void tree_gatherv_f(
+        float *sendbuf,
+        int sendcnt,
+        MPI_Datatype sendtype,
+        float *recvbuf,
+        int *recvcnts,
+        int *displs,
+        MPI_Datatype recvtype,
+        int root,
+        MPI_Comm comm
     );
 
 #if 0

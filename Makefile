@@ -14,7 +14,10 @@ all: $(OBJ)
 %.o: %.c $(HEADERS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-.PHONY: clean all
+.PHONY: clean all run
+
+run:
+	mpirun -np 10 ./treegather.bin --gather-method tree
 
 clean:
 	if [ -f main.o ]; then rm *.o; fi
