@@ -2,6 +2,13 @@
 
 A tree-based gathering function to reduce cost of a gatherv call
 
+## Dependencies
+
+So far just tested on:
+
+- GCC       >= 7.3.0
+- OpenMPI   >= 3.1.0
+
 ## Testing
 
 Results of testing the synchronous tree-based algorithm,
