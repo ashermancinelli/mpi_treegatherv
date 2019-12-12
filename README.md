@@ -21,17 +21,20 @@ showed very significant speedups. For example:
 
 ```bash
 > # using 384 doubles per proc
-> mpirun -np 24 ./treegather.bin --gather-method mpi
+> time mpirun -np 24 ./treegather.bin --gather-method mpi
+
 time mpirun -np 24 ./treegather.bin --gather-method mpi
 
 Using gather method: mpi.
 mpirun -np 24 ./treegather.bin --gather-method mpi  0.48s user 0.46s system 1346% cpu 0.070 total
-> mpirun -np 24 ./treegather.bin --gather-method tree
+> time mpirun -np 24 ./treegather.bin --gather-method tree
+
 time mpirun -np 24 ./treegather.bin --gather-method tree
 
 Using gather method: tree.
 mpirun -np 24 ./treegather.bin --gather-method tree  1.10s user 0.49s system 1482% cpu 0.107 total
-> mpirun -np 24 ./treegather.bin --gather-method itree
+> time mpirun -np 24 ./treegather.bin --gather-method itree
+
 time mpirun -np 24 ./treegather.bin --gather-method itree
 
 Using gather method: itree.
