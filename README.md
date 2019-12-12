@@ -30,3 +30,7 @@ time mpirun -np 24 ./treegather.bin --gather-method itree
 Using gather method: itree.
 mpirun -np 24 ./treegather.bin --gather-method itree  0.17s user 0.52s system 1091% cpu 0.064 total
 ```
+
+As we can see, using the `itree` parameter, which calls `tree_gatherv_d_async`, runs
+__much__, __much__ faster than any of the other algorithms.
+
