@@ -178,7 +178,7 @@ void tree_gatherv_d_async(
      * number of possible merges, aka number of bits to hold
      * world comm size
      */
-    MPI_Request *rec_hdls = malloc(sizeof(MPI_Request*) * bits);
+    MPI_Request *rec_hdls = malloc(sizeof(MPI_Request) * bits);
 
 #   ifdef __DEBUG
         if (rank == root)
