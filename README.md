@@ -5,7 +5,7 @@ A tree-based gathering function to reduce cost of a gatherv call
 ## Dependencies
 
 So far just tested on:
-
+- Red Hat Enterprise Linux Workstation release 6.6 (Santiago)
 - GCC       >= 7.3.0
 - OpenMPI   >= 3.1.0
 
