@@ -6,7 +6,7 @@
 
 #include "tree_gather.h"
 
-#define COUNT 384
+#define COUNT 3
 
 #define EXIT() \
     ({ \
@@ -32,8 +32,12 @@ int main(int argc, char** argv)
 
     int *offsets = malloc(sizeof(int) * size);
     int *cnts = malloc(sizeof(int) * size);
+
     for (i=0; i<size; i++)
         cnts[i] = COUNT;
+
+    if (rank == 0)
+        fprintf(stdout, "\n");
     
     for (i=0; i<argc; i++)
     {
@@ -48,7 +52,8 @@ int main(int argc, char** argv)
             strcpy(gather_method, argv[++i]);
 
             if ((strcmp(gather_method, "mpi") != 0) &&
-                    (strcmp(gather_method, "tree") != 0))
+                    (strcmp(gather_method, "tree") != 0) &&
+                    (strcmp(gather_method, "itree") != 0))
                 EXIT();
         }
     }
@@ -67,7 +72,7 @@ int main(int argc, char** argv)
     local_buffer = malloc(sizeof(double) * COUNT);
     
     for (i=0; i<cnts[rank]; i++)
-        local_buffer[i] = rank;
+        local_buffer[i] = rank + 1;
 
     if (strcmp(gather_method, "mpi") == 0)
     {
@@ -82,9 +87,22 @@ int main(int argc, char** argv)
             0,
             MPI_COMM_WORLD);
     }
-    else
+    else if (strcmp(gather_method, "tree") == 0)
     {
         tree_gatherv_d(
+            local_buffer,
+            cnts[rank],
+            MPI_FLOAT,
+            global_buffer,
+            cnts,
+            offsets,
+            MPI_FLOAT,
+            0,
+            MPI_COMM_WORLD);
+    }
+    else if (strcmp(gather_method, "itree") == 0)
+    {
+        tree_gatherv_d_async(
             local_buffer,
             cnts[rank],
             MPI_FLOAT,

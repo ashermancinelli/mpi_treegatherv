@@ -23,6 +23,12 @@ extern void tree_gatherv_d(
         MPI_Datatype recvtype, int root, MPI_Comm comm
     );
 
+extern void tree_gatherv_d_async(
+        double *sendbuf, int sendcnt, MPI_Datatype sendtype,
+        double *recvbuf, int *recvcnts, int *displs,
+        MPI_Datatype recvtype, int root, MPI_Comm comm
+    );
+
 extern void my_mpi_gatherv(
         double *sendbuf, int sendcnt,   MPI_Datatype sendtype,
         double *recvbuf, int *recvcnts, int *displs,
