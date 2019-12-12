@@ -146,7 +146,7 @@ void tree_gatherv_d_async(
         double *recvbuf, int *recvcnts, int *displs,
         MPI_Datatype recvtype, int root, MPI_Comm comm)
 {
-    int j, i, rank, comm_size, bits=0, partner_rank;
+    int i, rank, comm_size, bits=0, partner_rank;
 
     assert(root == 0);
 
@@ -178,7 +178,7 @@ void tree_gatherv_d_async(
      * number of possible merges, aka number of bits to hold
      * world comm size
      */
-    MPI_Request **rec_hdls = malloc(sizeof(MPI_Request*) * bits);
+    MPI_Request *rec_hdls = malloc(sizeof(MPI_Request*) * bits);
 
 #   ifdef __DEBUG
         if (rank == root)
@@ -195,9 +195,7 @@ void tree_gatherv_d_async(
     for (i=0; i<=bits; i++)
     {
         partner_rank = rank ^ (1<<i);
-
-        // If there is a pending rec, this will be overwritten
-        rec_hdls[i] = NULL;
+        rec_hdls[i] = MPI_REQUEST_NULL;
 
         /*
          * This means the node is the lower of the partners, 
@@ -210,14 +208,14 @@ void tree_gatherv_d_async(
                 int cnt = node_data_count(partner_rank, comm_size, recvcnts, i);
                 double* _recbuf = recvbuf + displs[partner_rank];
 #               ifdef __DEBUG
-                    fprintf(stdout, "RECIEVE %i <- %i (%i count at displ %i) on iter %i\n",
+                    fprintf(stdout, "ISSUED RECIEVE %i <- %i (%i count at displ %i) on iter %i\n",
                             rank, partner_rank, cnt, displs[partner_rank], i);
                     fflush(stdout);
 #               endif
 
                 MPI_Irecv(_recbuf, cnt, MPI_DOUBLE, 
                         partner_rank, 0, comm, 
-                        rec_hdls[i]);
+                        &rec_hdls[i]);
             }
         }
 
@@ -228,25 +226,32 @@ void tree_gatherv_d_async(
          */
         else
         {
+            /*
+             * Wait for any pending recv's to arrive. If there are none,
+             * move on to the send and die.
+             */
+            if (i > 0)
+            {
+#               ifdef __DEBUG
+                    fprintf(stdout, "rank %d waiting on %d recvs\n",
+                            rank, i);
+                    fflush(stdout);
+#               endif
+
+                MPI_Waitall(i, rec_hdls, MPI_STATUSES_IGNORE);
+
+#               ifdef __DEBUG
+                    fprintf(stdout, "rank %d successfully got %d recvs\n", rank, i);
+                    fflush(stdout);
+#               endif
+            }
+
             int cnt = node_data_count(rank, comm_size, recvcnts, i);
 #           ifdef __DEBUG
                 fprintf(stdout, "SEND %i -> %i (%i data at displ %i) on iter %i\n",
                         rank, partner_rank, cnt, displs[rank], i);
                 fflush(stdout);
 #           endif
-
-            /*
-             * Wait for any pending recv's to arrive. If all are null,
-             * move on to the send and die.
-             */
-            for(j=0; j<bits; j++)
-            {
-                MPI_Request* hdl = rec_hdls[j];
-                if(hdl != NULL)
-                {
-                    MPI_Wait(hdl, MPI_STATUS_IGNORE);
-                }
-            }
 
             MPI_Send(recvbuf + displs[rank], cnt,
                 MPI_DOUBLE, partner_rank, 0, comm);
@@ -258,6 +263,25 @@ void tree_gatherv_d_async(
             return;
         }
     }
+
+    /*
+     * Only root will get here - all other
+     * nodes will send and die eventually and root
+     * will be the last one alive.
+     */
+
+#   ifdef __DEBUG
+        fprintf(stdout, "Root node waiting on %d"
+                " issued recieves.\n", bits);
+        fflush(stdout);
+#   endif
+
+    MPI_Waitall(bits, rec_hdls, MPI_STATUSES_IGNORE);
+
+#   ifdef __DEBUG
+        fprintf(stdout, "Root node exiting gracefully.");
+        fflush(stdout);
+#   endif
 }
 
 void my_mpi_gatherv(
