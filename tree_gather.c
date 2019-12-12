@@ -207,13 +207,14 @@ void tree_gatherv_d_async(
             {
                 int cnt = node_data_count(partner_rank, comm_size, recvcnts, i);
                 double* _recbuf = recvbuf + displs[partner_rank];
+                UNUSED(_recbuf);
 #               ifdef __DEBUG
                     fprintf(stdout, "ISSUED RECIEVE %i <- %i (%i count at displ %i) on iter %i\n",
                             rank, partner_rank, cnt, displs[partner_rank], i);
                     fflush(stdout);
 #               endif
 
-                MPI_Irecv(_recbuf, cnt, MPI_DOUBLE, 
+                MPI_Irecv(recvbuf + displs[partner_rank], cnt, MPI_DOUBLE, 
                         partner_rank, 0, comm, 
                         &rec_hdls[i]);
             }
@@ -279,7 +280,7 @@ void tree_gatherv_d_async(
     MPI_Waitall(bits, rec_hdls, MPI_STATUSES_IGNORE);
 
 #   ifdef __DEBUG
-        fprintf(stdout, "Root node exiting gracefully.");
+        fprintf(stdout, "Root node exiting gracefully.\n");
         fflush(stdout);
 #   endif
 }

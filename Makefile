@@ -4,7 +4,7 @@ SRC = $(wildcard *.c)
 OBJ = $(SRC:.o=.c)
 HEADERS = $(wildcard *.h)
 CFLAGS_BASE = -Wall -Wextra -lmpi
-CFLAGS_DEBUG = $(CFLAGS_BASE) -D __DEBUG
+CFLAGS_DEBUG = $(CFLAGS_BASE) -D __DEBUG -g
 CFLAGS_OPT = $(CFLAGS_BASE) -O3
 BIN_NAME = treegather.bin
 
@@ -21,8 +21,10 @@ opt: $(OBJ)
 
 .PHONY: clean all run
 
-run:
-	mpirun -np 10 ./treegather.bin --gather-method tree
+run: all
+	#MALLOC_CHECK_=2 \
+				  
+	mpirun -np 15 treegather.bin --gather-method itree
 
 clean:
 	if [ -f main.o ]; then rm *.o; fi
