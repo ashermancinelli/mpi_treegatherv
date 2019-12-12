@@ -6,7 +6,7 @@
 
 #include "tree_gather.h"
 
-#define COUNT 3
+#define COUNT 384
 
 #define EXIT() \
     ({ \
