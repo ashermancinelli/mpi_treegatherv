@@ -13,6 +13,15 @@ unsigned int num_bits(int n)
     return count;
 }
 
+static inline __attribute__((always_inline))
+unsigned int sum(int* ar, int count)
+{
+    int sum = 0, i;
+    for (i=0; i<count; i++)
+        sum += ar[i];
+    return sum;
+}
+
 /*
  * Gets the offset for a node plus the offsets of it's
  * children
@@ -41,6 +50,26 @@ size_t node_data_count(
     return count;
 }
 
+inline int min_child_rank(
+        int* children,
+        int len)
+{
+    int i, min=99999;
+    for (i=0; i<len; i++)
+        min = children[i] < min ? children[i] : min;
+    return min;
+}
+
+inline int max_child_rank(
+        int* children,
+        int len)
+{
+    int i, min=0;
+    for (i=0; i<len; i++)
+        min = children[i] > min ? children[i] : min;
+    return min;
+}
+
 /*
  * Only using floats for now.
  *
@@ -56,13 +85,13 @@ void tree_gatherv_d(
 {
     int i, rank, comm_size, bits=0, partner_rank;
 
-    assert(root == 0);
-
     UNUSED(sendtype);
     UNUSED(recvtype);
 
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &comm_size);
+
+    bits = num_bits(comm_size);
 
     /*
      * Copy your local bit into the global buf
@@ -78,8 +107,6 @@ void tree_gatherv_d(
     {
         memcpy(recvbuf + displs[rank], sendbuf, sizeof(double)*sendcnt);
     }
-
-    bits = num_bits(comm_size);
 
 #   ifdef __DEBUG
         if (rank == root)
@@ -98,6 +125,18 @@ void tree_gatherv_d(
         partner_rank = rank ^ (1<<i);
 
         /*
+        // I have NO idea why this works
+        // used for artificial ranks for shifting root
+        // around to 0 rank
+        par = ar ^ (1<<i);
+        if ((par^root) >= comm_size)
+        {
+            ar -= (1<<(bits-2));
+            par = ar ^ (1<<i);
+        }
+        */
+
+        /*
          * This means the node is the lower of the partners, 
          * and will continue to the next round of gathering
          */
@@ -106,14 +145,13 @@ void tree_gatherv_d(
             if (partner_rank < comm_size)
             {
                 int cnt = node_data_count(partner_rank, comm_size, recvcnts, i);
-                double* _recbuf = recvbuf + displs[partner_rank];
 #               ifdef __DEBUG
                     fprintf(stdout, "RECIEVE %i <- %i (%i count at displ %i) on iter %i\n",
                             rank, partner_rank, cnt, displs[partner_rank], i);
                     fflush(stdout);
 #               endif
 
-                MPI_Recv(_recbuf, cnt,
+                MPI_Recv(recvbuf + displs[partner_rank], cnt,
                         MPI_DOUBLE, partner_rank, 0, comm, MPI_STATUS_IGNORE);
             }
         }
@@ -132,6 +170,28 @@ void tree_gatherv_d(
 #           endif
             MPI_Send(recvbuf + displs[rank], cnt,
                 MPI_DOUBLE, partner_rank, 0, comm);
+            break;
+        }
+    }
+
+    /*
+     * Gave up on getting smart with the ranks - if
+     * root is not 0, 0 just sends to root after finishing.
+     */
+    if (root != 0)
+    {
+        if (rank == root)
+        {
+            MPI_Recv(recvbuf, sum(recvcnts, comm_size),
+                    MPI_DOUBLE, 0, 0, comm, MPI_STATUS_IGNORE);
+        }
+        else if (rank == 0)
+        {
+            MPI_Send(recvbuf, sum(recvcnts, comm_size),
+                    MPI_DOUBLE, root, 0, comm);
+        }
+        else
+        {
             return;
         }
     }
@@ -206,8 +266,6 @@ void tree_gatherv_d_async(
             if (partner_rank < comm_size)
             {
                 int cnt = node_data_count(partner_rank, comm_size, recvcnts, i);
-                double* _recbuf = recvbuf + displs[partner_rank];
-                UNUSED(_recbuf);
 #               ifdef __DEBUG
                     fprintf(stdout, "ISSUED RECIEVE %i <- %i (%i count at displ %i) on iter %i\n",
                             rank, partner_rank, cnt, displs[partner_rank], i);
@@ -261,7 +319,7 @@ void tree_gatherv_d_async(
              * After sending data from node and all valid children,
              * node will never have another recv and can die.
              */
-            return;
+            break;
         }
     }
 
@@ -272,17 +330,47 @@ void tree_gatherv_d_async(
      */
 
 #   ifdef __DEBUG
-        fprintf(stdout, "Root node waiting on %d"
-                " issued recieves.\n", bits);
-        fflush(stdout);
+        if (rank == root)
+        {
+            fprintf(stdout, "Root node waiting on %d"
+                    " issued recieves.\n", bits);
+            fflush(stdout);
+        }
 #   endif
 
-    MPI_Waitall(bits, rec_hdls, MPI_STATUSES_IGNORE);
+    if (rank == 0)
+    {
+        // number of bits == number of merges, so
+        // root will have to wait on that many recvs
+        MPI_Waitall(bits, rec_hdls, MPI_STATUSES_IGNORE);
+    }
 
-#   ifdef __DEBUG
-        fprintf(stdout, "Root node exiting gracefully.\n");
-        fflush(stdout);
-#   endif
+    /*
+     * Gave up on getting smart with the ranks - if
+     * root is not 0, 0 just sends to root after finishing.
+     */
+    if (root != 0)
+    {
+        if (rank == root)
+        {
+            MPI_Recv(recvbuf, sum(recvcnts, comm_size),
+                    MPI_DOUBLE, 0, 0, comm, MPI_STATUS_IGNORE);
+#           ifdef __DEBUG
+                fprintf(stdout, "Root node exiting gracefully.\n");
+                fflush(stdout);
+#           endif
+        }
+        else if (rank == 0)
+        {
+            MPI_Send(recvbuf, sum(recvcnts, comm_size),
+                    MPI_DOUBLE, root, 0, comm);
+        }
+        else
+        {
+            return;
+        }
+    }
+
 }
 
 void my_mpi_gatherv(

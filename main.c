@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include "mpi.h"
 
 #include "tree_gather.h"
@@ -22,9 +23,11 @@ int main(int argc, char** argv)
 {
     int rank, size, i,
         num_loops = -1, data_per_node = -1;
+    bool display_result = false;
     double *global_buffer;
     double *local_buffer;
     char gather_method[32];
+    FILE* outfile;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -67,6 +70,17 @@ int main(int argc, char** argv)
 
             data_per_node = atoi(argv[++i]);
         }
+        else if (strstr(argv[i], "--display-result") != NULL)
+        {
+            char *substr;
+            if ((substr = strstr(argv[i], "=")) != NULL)
+            {
+                outfile = fopen(++substr, "w+");
+            }
+            else
+                outfile = stdout;
+            display_result = true;
+        }
     }
 
     if (num_loops == -1)
@@ -80,21 +94,14 @@ int main(int argc, char** argv)
 
     if (!rank)
     {
-        fprintf(stdout, "Using gather method: %s.\n", gather_method);
-        fprintf(stdout, "Looping %d times.\n", num_loops);
-        fprintf(stdout, "Using %d data points per node.\n", data_per_node);
-        fflush(stdout);
+        fprintf(outfile, "Using gather method: %s.\n", gather_method);
+        fprintf(outfile, "Looping %d times.\n", num_loops);
+        fprintf(outfile, "Using %d data points per node.\n", data_per_node);
+        fflush(outfile);
     }
 
     for (i=0; i<num_loops; i++)
     {
-#       ifdef __DEBUG
-            if (!rank)
-            {
-                fprintf(stdout, "On loop number %d", i+1);
-                fflush(stdout);
-            }
-#       endif
         offsets[0] = 0;
         for (i=1; i < size; i++)
             offsets[i] = offsets[i-1] + cnts[i-1];
@@ -146,21 +153,27 @@ int main(int argc, char** argv)
         }
 
 #       ifdef __DEBUG
-            if (rank == 0 && i == 0)
+            if (display_result)
             {
-                fprintf(stdout, "Printing out final global buffer on first iteration.");
-                for (i=0; i<size*data_per_node; i++)
+                if (rank == 0)
                 {
-                    fprintf(stdout, "global_buffer[%i] = %.1f\n", i, global_buffer[i]);
+                    fprintf(outfile, "Printing out final global buffer on first iteration.\n");
+                    for (i=0; i<size*data_per_node; i++)
+                    {
+                        fprintf(outfile, "global_buffer[%i] = %.1f\n", i, global_buffer[i]);
+                    }
                 }
+                fflush(outfile);
             }
-            fflush(stdout);
 #       endif
 
         free(local_buffer);     free(global_buffer);
     }
 
     free(offsets);      free(cnts);
+
+    if (outfile != stdout)
+        fclose(outfile);
 
     MPI_Finalize();
     return 0;
