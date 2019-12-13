@@ -16,10 +16,10 @@ unsigned int num_bits(int n)
 static inline __attribute__((always_inline))
 unsigned int sum(int* ar, int count)
 {
-    int sum = 0, i;
+    int n = 0, i;
     for (i=0; i<count; i++)
-        sum += ar[i];
-    return sum;
+        n += ar[i];
+    return n;
 }
 
 /*
@@ -319,7 +319,7 @@ void tree_gatherv_d_async(
              * After sending data from node and all valid children,
              * node will never have another recv and can die.
              */
-            break;
+            return;
         }
     }
 
@@ -349,11 +349,12 @@ void tree_gatherv_d_async(
      * Gave up on getting smart with the ranks - if
      * root is not 0, 0 just sends to root after finishing.
      */
+    /*
     if (root != 0)
     {
         if (rank == root)
         {
-            MPI_Recv(recvbuf, sum(recvcnts, comm_size),
+            MPI_Recv(recvbuf, sum(recvcnts, comm_size-1),
                     MPI_DOUBLE, 0, 0, comm, MPI_STATUS_IGNORE);
 #           ifdef __DEBUG
                 fprintf(stdout, "Root node exiting gracefully.\n");
@@ -362,14 +363,16 @@ void tree_gatherv_d_async(
         }
         else if (rank == 0)
         {
-            MPI_Send(recvbuf, sum(recvcnts, comm_size),
+            MPI_Send(recvbuf, sum(recvcnts, comm_size-1),
                     MPI_DOUBLE, root, 0, comm);
         }
-        else
-        {
-            return;
-        }
     }
+    */
+
+#   ifdef __DEBUG
+        fprintf(stdout, "EXIT: rank %d exiting gracefully.\n", rank);
+        fflush(stdout);
+#   endif
 
 }
 

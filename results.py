@@ -38,3 +38,4 @@ if __name__ == '__main__':
     avg_itree = sum(itree) / len(itree)
     print('Results (average in seconds): \n\tTree: %.4f\n\tITree: %.4f\n\tMPI: %.4f\nover %d trials'
             % (avg_tree, avg_mpi, avg_itree, (len(mpi) + len(tree) + len(itree))/3))
+    print('\nFull results:\n\tMPI: ', mpi, '\n\tITree: ', itree)
