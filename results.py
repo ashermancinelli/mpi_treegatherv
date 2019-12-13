@@ -14,23 +14,27 @@ if __name__ == '__main__':
 
     mpi = []
     tree = []
+    itree = []
 
     found = False
     for l in lines:
-        if ' MPI ' in l:
-            found = True
+        if ' mpi.' in l:
+            n = mpi
+        elif ' tree.' in l:
+            n = tree
+        elif ' itree.' in l:
+            n = itree
 
         if 'sys' in l:
             l = l.replace('sys', '').strip().replace('0m', '').replace('s', '')
-            if found:
-                mpi.append(l)
-            else:
-                tree.append(l)
+            n.append(l)
 
     mpi = list(map(float, mpi))
     tree = list(map(float, tree))
+    itree = list(map(float, itree))
 
     avg_mpi = sum(mpi) / len(mpi)
     avg_tree = sum(tree) / len(tree)
-    print('Results (average in seconds): \n\tTree: %.4f\n\tMPI: %.4f\nover %d trials'
-            % (avg_tree, avg_mpi, (len(mpi) + len(tree))/2))
+    avg_itree = sum(itree) / len(itree)
+    print('Results (average in seconds): \n\tTree: %.4f\n\tITree: %.4f\n\tMPI: %.4f\nover %d trials'
+            % (avg_tree, avg_mpi, avg_itree, (len(mpi) + len(tree) + len(itree))/3))

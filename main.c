@@ -146,7 +146,7 @@ int main(int argc, char** argv)
         }
 
 #       ifdef __DEBUG
-            if (!rank && i == 0)
+            if (rank == 0 && i == 0)
             {
                 fprintf(stdout, "Printing out final global buffer on first iteration.");
                 for (i=0; i<size*data_per_node; i++)
@@ -156,7 +156,11 @@ int main(int argc, char** argv)
             }
             fflush(stdout);
 #       endif
+
+        free(local_buffer);     free(global_buffer);
     }
+
+    free(offsets);      free(cnts);
 
     MPI_Finalize();
     return 0;
