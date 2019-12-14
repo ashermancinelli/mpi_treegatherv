@@ -9,7 +9,11 @@
 
 #define EXIT() \
     ({ \
-        fprintf(stderr, usage); \
+        if (!rank) \
+        { \
+            fprintf(stderr, usage); \
+            fflush(stderr); \
+        } \
         MPI_Finalize(); \
         return 0; \
      })
@@ -26,6 +30,8 @@ static inline void parr(
 
 char* usage = "Options:\n"
     "\t--gather-method  (mpi|tree|itree)\n"
+    "\t--display-result=<filename or blank for stdout>\n"
+    "\t--data-per-node  <int>\n"
     "\t--num-loops      <int>\n";
 
 int main(int argc, char** argv)
@@ -90,6 +96,10 @@ int main(int argc, char** argv)
             }
             display_result = true;
         }
+        else
+        {
+            EXIT();
+        }
     }
 
     if (num_loops == -1)
@@ -124,7 +134,7 @@ int main(int argc, char** argv)
         fprintf(outfile, "Using gather method: %s.\n", gather_method);
         fprintf(outfile, "Looping %d times.\n", num_loops);
         fprintf(outfile, "Using %d data points per node.\n", data_per_node);
-        fprintf(outfile, "size %d", size);
+        fprintf(outfile, "size %d\n", size);
         fflush(outfile);
     }
 
