@@ -176,19 +176,17 @@ int main(int argc, char** argv)
                 MPI_COMM_WORLD);
         }
 
-#       ifdef __DEBUG
-            if (display_result && i == 0)
+        if (display_result && i == 0)
+        {
+            if (rank == 0)
             {
-                if (rank == 0)
+                for (j=0; j<size*data_per_node; j++)
                 {
-                    for (j=0; j<size*data_per_node; j++)
-                    {
-                        fprintf(outfile, "global_buffer[%i] = %lf\n", j, global_buffer[j]);
-                    }
+                    fprintf(outfile, "global_buffer[%i] = %lf\n", j, global_buffer[j]);
                 }
-                fflush(outfile);
             }
-#       endif
+            fflush(outfile);
+        }
     }
     free(global_buffer);        free(local_buffer);
 
