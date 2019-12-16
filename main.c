@@ -20,17 +20,18 @@
         return 0; \
      })
 
-#define KEEP_RATIO 0.8f
-#define GREEN       "[0;32m"
-#define RED         "[1;31m"
-#define RESET_COLOR "[0m"
+#define DEFAULT_KEEP_RATIO 0.8f
+#define GREEN       "\033[0;32m"
+#define RED         "\033[1;31m"
+#define RESET_COLOR "\033[0m"
 
 char* usage = "Usage:\n"
-    "\t--gather-method  (mpi|tree|itree)\n"
+    "\t--gather-method      (mpi|tree|itree)\n"
     "\t--display-time=<filename or blank for stdout>\n"
     "\t--display-buf\n"
-    "\t--data-per-node  <int>\n"
-    "\t--num-loops      <int>\n";
+    "\t--data-per-node      <int>\n"
+    "\t--keep-percentage    <int>\n"
+    "\t--num-loops          <int>\n";
 
 static int cmp (const void * a, const void * b)
 {
@@ -56,6 +57,7 @@ int main(int argc, char** argv)
     FILE* outfile;
     double start, end;
     double *elapsed_times;
+    float keep_percentage = DEFAULT_KEEP_RATIO;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -92,6 +94,13 @@ int main(int argc, char** argv)
                 EXIT();
 
             num_loops = atoi(argv[++i]);
+        }
+        else if (strcmp(argv[i], "--keep-percentage") == 0)
+        {
+            if (i == argc+1) 
+                EXIT();
+
+            keep_percentage = (float)atoi(argv[++i]) / 100;
         }
         else if (strcmp(argv[i], "--data-per-node") == 0)
         {
@@ -148,11 +157,10 @@ int main(int argc, char** argv)
         for (i=0; i<size; i++)
             fprintf(outfile, "offset[%i] = %i\n", i, offsets[i]);
         fprintf(outfile, "\n");
-        fprintf(outfile, "Looping %d times.\n", num_loops);
         fprintf(outfile, "Using gather method: %s.\n", gather_method);
         fprintf(outfile, "Looping %d times.\n", num_loops);
         fprintf(outfile, "Using %d data points per node.\n", data_per_node);
-        fprintf(outfile, "size %d\n\n", size);
+        fprintf(outfile, "Using %d procs.\n\n", size);
         fflush(outfile);
     }
 
@@ -228,7 +236,8 @@ int main(int argc, char** argv)
 
     if (rank == 0 && display_time)
     {
-        int top = (int)(num_loops * KEEP_RATIO);
+        int top = (int)(num_loops * keep_percentage);
+        fprintf(outfile, "Keeping the top %.2f percent of the benchmarks.\n", keep_percentage*100);
         double avg = 0.f;
         sort(elapsed_times, num_loops, sizeof(double));
         fprintf(outfile, "\nIteration\t\tTime\n----------------------------------\n");
