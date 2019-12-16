@@ -79,8 +79,8 @@ inline int max_child_rank(
  * Only gather with root = 0
  */
 void tree_gatherv_d(
-        double * restrict sendbuf, int sendcnt,   MPI_Datatype sendtype,
-        double * restrict recvbuf, int *recvcnts, int *displs,
+        double * sendbuf, int sendcnt,   MPI_Datatype sendtype,
+        double * recvbuf, int *recvcnts, int *displs,
         MPI_Datatype recvtype, int root, MPI_Comm comm)
 {
     int i, rank, comm_size, bits=0, partner_rank;
@@ -208,8 +208,6 @@ void tree_gatherv_d_async(
 {
     int i, rank, comm_size, bits=0, partner_rank;
 
-    assert(root == 0);
-
     UNUSED(sendtype);
     UNUSED(recvtype);
 
@@ -238,7 +236,10 @@ void tree_gatherv_d_async(
      * number of possible merges, aka number of bits to hold
      * world comm size
      */
-    MPI_Request *rec_hdls = malloc(sizeof(MPI_Request) * bits);
+    // MPI_Request *rec_hdls = malloc(sizeof(MPI_Request) * bits);
+    // I think the above is causing problems. Statically allocating
+    // is annoying but hopefully it prevents the memory corruption
+    MPI_Request rec_hdls[MAX_MPI_RANKS];
 
 #   ifdef __DEBUG
         if (rank == root)
@@ -349,7 +350,6 @@ void tree_gatherv_d_async(
      * Gave up on getting smart with the ranks - if
      * root is not 0, 0 just sends to root after finishing.
      */
-    /*
     if (root != 0)
     {
         if (rank == root)
@@ -367,7 +367,6 @@ void tree_gatherv_d_async(
                     MPI_DOUBLE, root, 0, comm);
         }
     }
-    */
 
 #   ifdef __DEBUG
         fprintf(stdout, "EXIT: rank %d exiting gracefully.\n", rank);

@@ -10,6 +10,7 @@
 #include "mpi.h"
 
 #define UNUSED(x) (void)(x)
+#define MAX_MPI_RANKS 50
 
 /*
  * Same function stub as MPI_Gatherv

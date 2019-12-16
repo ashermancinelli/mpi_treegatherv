@@ -20,17 +20,36 @@
         return 0; \
      })
 
-char* usage = "Options:\n"
+#define KEEP_RATIO 0.8f
+#define GREEN       "[0;32m"
+#define RED         "[1;31m"
+#define RESET_COLOR "[0m"
+
+char* usage = "Usage:\n"
     "\t--gather-method  (mpi|tree|itree)\n"
-    "\t--display-result=<filename or blank for stdout>\n"
+    "\t--display-time=<filename or blank for stdout>\n"
+    "\t--display-buf\n"
     "\t--data-per-node  <int>\n"
     "\t--num-loops      <int>\n";
+
+static int cmp (const void * a, const void * b)
+{
+    if (*(double*)a > *(double*)b) return 1;
+    else if (*(double*)a < *(double*)b) return -1;
+    else return 0;  
+}
+
+void sort(void* base, size_t n, size_t size)
+{
+    qsort(base, n, size, cmp);
+}
 
 int main(int argc, char** argv)
 {
     int rank, size, i, j,
         num_loops = -1, data_per_node = -1;
-    bool display_result = false;
+    bool display_buf = false;
+    bool display_time = false;
     double *global_buffer;
     double *local_buffer;
     char gather_method[32];
@@ -81,14 +100,18 @@ int main(int argc, char** argv)
 
             data_per_node = atoi(argv[++i]);
         }
-        else if (strstr(argv[i], "--display-result") != NULL)
+        else if (strstr(argv[i], "--display-time") != NULL)
         {
             char *substr = malloc(sizeof(char)*64);
             if ((substr = strstr(argv[i], "=")) != NULL)
             {
                 outfile = fopen(++substr, "w+");
             }
-            display_result = true;
+            display_time = true;
+        }
+        else if (strstr(argv[i], "--display-buf") != NULL)
+        {
+            display_buf = true;
         }
         else
         {
@@ -188,29 +211,34 @@ int main(int argc, char** argv)
             end = MPI_Wtime();
         }
 
-        if (display_result && rank == 0)
+        if (rank == 0)
         {
-            if (i == 0 && outfile != stdout)
+            if (display_buf && i == 0)
             {
                 for (j=0; j<size*data_per_node; j++)
                 {
                     fprintf(outfile, "global_buffer[%i] = %lf\n", j, global_buffer[j]);
                 }
+                fflush(outfile);
             }
             elapsed_times[i] = end - start;
-            fprintf(outfile, "Elapsed time for iteration %i is %.15f sec\n", i, elapsed_times[i]);
-            fflush(outfile);
         }
     }
     free(global_buffer);        free(local_buffer);
 
-    if (rank == 0 && display_result)
+    if (rank == 0 && display_time)
     {
+        int top = (int)(num_loops * KEEP_RATIO);
         double avg = 0.f;
+        sort(elapsed_times, num_loops, sizeof(double));
+        fprintf(outfile, "\nIteration\t\tTime\n----------------------------------\n");
         for (i=0; i<num_loops; i++)
+            fprintf(outfile, "\t%i\t\t%.15f\n", i, elapsed_times[i]);
+        for (i=0; i<top; i++)
             avg += elapsed_times[i]; 
-        avg /= num_loops;
-        fprintf(outfile, "Average time: %.15f seconds.\n", avg);
+        avg /= top;
+        fprintf(outfile, "\nAVERAGE\t%s\t%.15f\n",
+                gather_method, avg);
         fflush(outfile);
     }
 
