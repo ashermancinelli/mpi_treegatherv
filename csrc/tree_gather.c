@@ -23,6 +23,21 @@ unsigned int sum(int* ar, int count)
 }
 
 /*
+ * calculated how many requests the given
+ * rank will have to wait on in the persistent
+ * communication implementation
+ */
+static inline __attribute__((always_inline))
+int calc_num_reqs(int bits, int rank)
+{
+    int n = 0, i;
+    for (i=0; i<=bits; i++)
+        if (rank < (rank ^ (1<<i)))
+            n++;
+    return n;
+}
+
+/*
  * Gets the offset for a node plus the offsets of it's
  * children
  */
@@ -242,7 +257,7 @@ void tree_gatherv_d_async(
     // MPI_Request *rec_hdls = malloc(sizeof(MPI_Request) * bits);
     // I think the above is causing problems. Statically allocating
     // is annoying but hopefully it prevents the memory corruption
-    MPI_Request rec_hdls[MAX_MPI_RANKS];
+    MPI_Request rec_hdls[MAX_MPI_BITS];
 
 #   ifdef __DEBUG
         fprintf(stdout, "%s", BLUE);
@@ -380,6 +395,139 @@ void tree_gatherv_d_async(
 
 }
 
+/*
+ * parameter reqs must have allocated enough space
+ * to hold teh correct number of requests
+ */
+void tree_gatherv_d_persistent(
+        double *sendbuf, int sendcnt, MPI_Datatype sendtype,
+        double *recvbuf, int *recvcnts, int *displs,
+        MPI_Datatype recvtype, int root, MPI_Comm comm,
+        MPI_Request* reqs)
+{
+    int i, rank, comm_size, bits=0, partner_rank;
+
+    UNUSED(sendtype);
+    UNUSED(recvtype);
+
+    MPI_Comm_rank(comm, &rank);
+    MPI_Comm_size(comm, &comm_size);
+
+    if (recvbuf == NULL)
+    {
+        recvbuf = sendbuf;
+    }
+    else
+    {
+        memcpy(recvbuf + displs[rank], sendbuf, sizeof(double)*sendcnt);
+    }
+
+    bits = num_bits(comm_size);
+
+#   ifdef __DEBUG
+        fprintf(stdout, "%s", BLUE);
+        if (rank == root)
+        {
+            fprintf(stdout, "\tBits to hold world size: %i\n"
+                "\tComm size capacity: %i\n"
+                "\tComm size: %i\n"
+                "\tOffset from highest rank to "
+                "highest capacity for number of bits: %i\n",
+                bits, 1<<bits, comm_size, (1<<bits)-comm_size);
+        }
+#   endif
+
+    for (i=0; i<=bits; i++)
+    {
+        partner_rank = rank ^ (1<<i);
+
+        /*
+         * This means the node is the lower of the partners, 
+         * and will continue to the next round of gathering
+         */
+        if (rank < partner_rank)
+        {
+            if (partner_rank < comm_size)
+            {
+                int cnt = node_data_count(partner_rank, comm_size, recvcnts, i);
+#               ifdef __DEBUG
+                    fprintf(stdout, "ISSUED RECIEVE %i <- %i (%i count at displ %i) on iter %i\n",
+                            rank, partner_rank, cnt, displs[partner_rank], i);
+                    fflush(stdout);
+#               endif
+
+                if (reqs[i] == MPI_REQUEST_NULL)
+                {
+                    MPI_Recv_init(recvbuf + displs[partner_rank], cnt, MPI_DOUBLE, 
+                        partner_rank, 0, comm, &reqs[i]);
+                }
+                MPI_Start(&reqs[i]);
+            }
+        }
+
+        else
+        {
+            if (i > 0)
+            {
+#               ifdef __DEBUG
+                    fprintf(stdout, "rank %d waiting on %d recvs\n",
+                            rank, i);
+                    fflush(stdout);
+#               endif
+
+                MPI_Waitall(i, reqs, MPI_STATUSES_IGNORE);
+
+#               ifdef __DEBUG
+                    fprintf(stdout, "rank %d successfully got %d recvs\n", rank, i);
+                    fflush(stdout);
+#               endif
+            }
+
+            int cnt = node_data_count(rank, comm_size, recvcnts, i);
+#           ifdef __DEBUG
+                fprintf(stdout, "SEND %i -> %i (%i data at displ %i) on iter %i\n",
+                        rank, partner_rank, cnt, displs[rank], i);
+                fflush(stdout);
+#           endif
+
+            if (reqs[i] == MPI_REQUEST_NULL)
+            {
+                MPI_Send_init(recvbuf + displs[rank], cnt,
+                    MPI_DOUBLE, partner_rank, 0, comm, &reqs[i]);
+            }
+            MPI_Start(&reqs[i]);
+
+            return;
+        }
+    }
+
+    if (rank == 0)
+    {
+        MPI_Waitall(bits, reqs, MPI_STATUSES_IGNORE);
+    }
+
+    if (root != 0)
+    {
+        if (rank == root)
+        {
+            MPI_Recv(recvbuf, sum(recvcnts, comm_size-1),
+                    MPI_DOUBLE, 0, 0, comm, MPI_STATUS_IGNORE);
+        }
+        else if (rank == 0)
+        {
+            MPI_Send(recvbuf, sum(recvcnts, comm_size-1),
+                    MPI_DOUBLE, root, 0, comm);
+        }
+    }
+
+#   ifdef __DEBUG
+        fprintf(stdout, "%s", RESET);
+        fprintf(stdout, "EXIT: rank %d exiting gracefully.\n", rank);
+        fflush(stdout);
+#   endif
+
+}
+
 void my_mpi_gatherv(
         double *sendbuf, int sendcnt,   MPI_Datatype sendtype,
         double *recvbuf, int *recvcnts, int *displs,
@@ -399,10 +547,6 @@ void my_mpi_gatherv(
      * Note that even root sends to itself in this
      * algorithm
      */
-    for (i=0; i<comm_size; i++)
-    {
-        MPI_Send(sendbuf, sendcnt, MPI_DOUBLE, root, 0, comm);
-    }
 
     if (rank == root)
     {
@@ -410,5 +554,9 @@ void my_mpi_gatherv(
         {
             MPI_Recv(recvbuf + displs[i], recvcnts[i], MPI_DOUBLE, i, 0, comm, MPI_STATUS_IGNORE);
         }
+    }
+    else
+    {
+        MPI_Send(sendbuf, sendcnt, MPI_DOUBLE, root, 0, comm);
     }
 }
