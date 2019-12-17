@@ -9,8 +9,10 @@ program main
     double precision, dimension(:), allocatable ::  global_buf
     double precision, dimension(:), allocatable ::  local_buf
 
-    character(len=32) :: arg, gather_method, c
+    character(len=32) :: gather_method
     
+    gather_method = 'mpi'
+
     call MPI_INIT(ierror)
     call MPI_COMM_SIZE(MPI_COMM_WORLD, comm_size, ierror)
     call MPI_COMM_RANK(MPI_COMM_WORLD, rank, ierror)
