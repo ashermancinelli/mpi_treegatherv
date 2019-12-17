@@ -103,6 +103,8 @@ int main(int argc, char** argv)
                 EXIT();
 
             keep_percentage = (float)atoi(argv[++i]) / 100;
+            if (keep_percentage > 1.f || keep_percentage < 0.f)
+                EXIT();
         }
         else if (strcmp(argv[i], "--data-per-node") == 0)
         {
