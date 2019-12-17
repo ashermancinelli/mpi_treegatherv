@@ -111,12 +111,12 @@ void tree_gatherv_d(
 #   ifdef __DEBUG
         if (rank == root)
         {
-            fprintf(stdout, "\tBits to hold world size: %i\n"
+            fprintf(stdout, "%s\tBits to hold world size: %i\n"
                 "\tComm size capacity: %i\n"
                 "\tComm size: %i\n"
                 "\tOffset from highest rank to "
                 "highest capacity for number of bits: %i\n",
-                bits, 1<<bits, comm_size, (1<<bits)-comm_size);
+                BLUE, bits, 1<<bits, comm_size, (1<<bits)-comm_size);
         }
 #   endif
 
@@ -174,6 +174,9 @@ void tree_gatherv_d(
         }
     }
 
+#   ifdef __DEBUG
+        if (rank == 0) fprintf(stdout, "%s", RESET);
+#   endif
     /*
      * Gave up on getting smart with the ranks - if
      * root is not 0, 0 just sends to root after finishing.
@@ -242,6 +245,7 @@ void tree_gatherv_d_async(
     MPI_Request rec_hdls[MAX_MPI_RANKS];
 
 #   ifdef __DEBUG
+        fprintf(stdout, "%s", BLUE);
         if (rank == root)
         {
             fprintf(stdout, "\tBits to hold world size: %i\n"
@@ -369,6 +373,7 @@ void tree_gatherv_d_async(
     }
 
 #   ifdef __DEBUG
+        fprintf(stdout, "%s", RESET);
         fprintf(stdout, "EXIT: rank %d exiting gracefully.\n", rank);
         fflush(stdout);
 #   endif

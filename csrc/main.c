@@ -9,21 +9,18 @@
 
 #include "tree_gather.h"
 
+#define DEFAULT_KEEP_RATIO 0.8f
+
 #define EXIT() \
     ({ \
         if (!rank) \
         { \
-            fprintf(stderr, usage); \
+            fprintf(stderr, "%s%s%s", RED, usage, RESET); \
             fflush(stderr); \
         } \
         MPI_Finalize(); \
         return 0; \
      })
-
-#define DEFAULT_KEEP_RATIO 0.8f
-#define GREEN       "\033[0;32m"
-#define RED         "\033[1;31m"
-#define RESET_COLOR "\033[0m"
 
 char* usage = "Usage:\n"
     "\t--gather-method      (mpi|tree|itree)\n"
@@ -236,13 +233,18 @@ int main(int argc, char** argv)
 
     if (rank == 0 && display_time)
     {
-        int top = (int)(num_loops * keep_percentage);
+        int top = (int)(num_loops * keep_percentage - 1);
         fprintf(outfile, "Keeping the top %.2f percent of the benchmarks.\n", keep_percentage*100);
         double avg = 0.f;
         sort(elapsed_times, num_loops, sizeof(double));
         fprintf(outfile, "\nIteration\t\tTime\n----------------------------------\n");
+        fprintf(outfile, "%s", GREEN);
         for (i=0; i<num_loops; i++)
+        {
+            if (i > top) fprintf(outfile, "%s", RED);
             fprintf(outfile, "\t%i\t\t%.15f\n", i, elapsed_times[i]);
+        }
+        fprintf(outfile, "%s", RESET);
         for (i=0; i<top; i++)
             avg += elapsed_times[i]; 
         avg /= top;

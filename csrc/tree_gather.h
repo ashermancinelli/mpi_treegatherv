@@ -11,6 +11,10 @@
 
 #define UNUSED(x) (void)(x)
 #define MAX_MPI_RANKS 50
+#define GREEN       "\033[0;32m"
+#define RED         "\033[1;31m"
+#define BLUE        "\033[1;34m"
+#define RESET       "\033[0m"
 
 /*
  * Same function stub as MPI_Gatherv
