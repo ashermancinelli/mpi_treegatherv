@@ -23,7 +23,7 @@
      })
 
 char* usage = "Usage:\n"
-    "\t--gather-method      (mpi|my-mpi|tree|itree|persistent)\n"
+    "\t--gather-method      (mpi|my-mpi|my-mpi-persist|tree|itree|itree-persist)\n"
     "\t--display-time=<filename or blank for stdout>\n"
     "\t--display-buf\n"
     "\t--data-per-node      <int>\n"
@@ -88,7 +88,7 @@ int main(int argc, char** argv)
                     (strcmp(gather_method, "my-mpi") != 0) &&
                     (strcmp(gather_method, "my-mpi-persist") != 0) &&
                     (strcmp(gather_method, "tree") != 0) &&
-                    (strcmp(gather_method, "persistent") != 0) &&
+                    (strcmp(gather_method, "itree-persist") != 0) &&
                     (strcmp(gather_method, "itree") != 0))
                 EXIT();
         }
@@ -226,7 +226,7 @@ int main(int argc, char** argv)
                 MPI_COMM_WORLD);
             end = MPI_Wtime();
         }
-        else if (strcmp(gather_method, "persistent") == 0)
+        else if (strcmp(gather_method, "itree-persist") == 0)
         {
             start = MPI_Wtime();
             tree_gatherv_d_persistent(

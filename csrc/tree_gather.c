@@ -400,6 +400,7 @@ void tree_gatherv_d_persistent(
         MPI_Request* reqs)
 {
     int i, rank, comm_size, bits=0, partner_rank;
+    static int num_reqs = 0;
 
     UNUSED(sendtype);
     UNUSED(recvtype);
@@ -431,15 +432,27 @@ void tree_gatherv_d_persistent(
         }
 #   endif
 
-    if (rank == 0 && reqs[comm_size-2] != MPI_REQUEST_NULL)
+    if (num_reqs != 0)
     {
-        MPI_Startall(comm_size-1, reqs);
+        MPI_Startall(num_reqs, reqs);
         goto cleanup;
     }
-    else if (rank != 0 && reqs[0] != MPI_REQUEST_NULL)
+    else if (reqs[0] != MPI_REQUEST_NULL)
     {
-        MPI_Start(&reqs[0]);
-        goto cleanup;
+        if (rank == 0)
+        {
+            while (reqs[num_reqs] != MPI_REQUEST_NULL)
+                num_reqs++;
+            MPI_Startall(num_reqs, reqs);
+            goto cleanup;
+        }
+        else
+        {
+            while (reqs[num_reqs] != MPI_REQUEST_NULL)
+                num_reqs++;
+            MPI_Startall(num_reqs, reqs);
+            goto cleanup;
+        }
     }
 
     for (i=0; i<=bits; i++)
@@ -507,14 +520,11 @@ void tree_gatherv_d_persistent(
     }
 
 cleanup:
-    if (rank == 0)
-    {
-        MPI_Waitall(bits, reqs, MPI_STATUSES_IGNORE);
-    }
-    else
-    {
-        MPI_Wait(&reqs[0], MPI_STATUS_IGNORE);
-    }
+    if (num_reqs == 0)
+        for (; reqs[num_reqs] != MPI_REQUEST_NULL; num_reqs++)
+            ;
+
+    MPI_Waitall(num_reqs, reqs, MPI_STATUSES_IGNORE);
 
     if (root != 0)
     {
@@ -608,7 +618,7 @@ void my_mpi_gatherv_persistent(
         }
     }
 
-    if (rank == root)
+    if (rank != root)
     {
         MPI_Start(&reqs[0]);
         MPI_Wait(&reqs[0], MPI_STATUS_IGNORE);
