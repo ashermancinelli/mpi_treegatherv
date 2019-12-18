@@ -534,6 +534,7 @@ void my_mpi_gatherv(
         MPI_Datatype recvtype, int root, MPI_Comm comm)
 {
     int i, rank, comm_size;
+    MPI_Request recs[MAX_MPI_BITS];
 
     UNUSED(recvtype);
     UNUSED(sendtype);
@@ -541,19 +542,24 @@ void my_mpi_gatherv(
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &comm_size);
 
-    /*
-     * Algorithm for normal gatherv
-     * 
-     * Note that even root sends to itself in this
-     * algorithm
-     */
-
     if (rank == root)
     {
+        memcpy(recvbuf + displs[rank], sendbuf, sizeof(double)*sendcnt);
         for (i=0; i<comm_size; i++)
         {
-            MPI_Recv(recvbuf + displs[i], recvcnts[i], MPI_DOUBLE, i, 0, comm, MPI_STATUS_IGNORE);
+            recs[i] = MPI_REQUEST_NULL;
+            if (i == rank)
+            {
+                MPI_Isend(recvbuf + displs[i], recvcnts[i],
+                        MPI_DOUBLE, i, 0, comm, &recs[i]);
+            }
+            else
+            {
+                MPI_Irecv(recvbuf + displs[i], recvcnts[i],
+                        MPI_DOUBLE, i, 0, comm, &recs[i]);
+            }
         }
+        MPI_Waitall(comm_size, recs, MPI_STATUSES_IGNORE);
     }
     else
     {
