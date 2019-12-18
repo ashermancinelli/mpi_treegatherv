@@ -55,7 +55,7 @@ int main(int argc, char** argv)
     double start, end;
     double *elapsed_times;
     float keep_percentage = DEFAULT_KEEP_RATIO;
-    MPI_Request reqs[MAX_MPI_BITS];
+    MPI_Request reqs[MAX_MPI_RANKS];
 
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -86,6 +86,7 @@ int main(int argc, char** argv)
 
             if ((strcmp(gather_method, "mpi") != 0) &&
                     (strcmp(gather_method, "my-mpi") != 0) &&
+                    (strcmp(gather_method, "my-mpi-persist") != 0) &&
                     (strcmp(gather_method, "tree") != 0) &&
                     (strcmp(gather_method, "persistent") != 0) &&
                     (strcmp(gather_method, "itree") != 0))
@@ -169,8 +170,7 @@ int main(int argc, char** argv)
         fflush(outfile);
     }
 
-    // for persistent communication
-    for (i=0; i<MAX_MPI_BITS; i++) reqs[i] = MPI_REQUEST_NULL;
+    for (i=0; i<MAX_MPI_RANKS; i++) reqs[i] = MPI_REQUEST_NULL;
 
     for (i=0; i<num_loops; i++)
     {
@@ -255,6 +255,22 @@ int main(int argc, char** argv)
                 MPI_DOUBLE,
                 0,
                 MPI_COMM_WORLD);
+            end = MPI_Wtime();
+        }
+        else if (strcmp(gather_method, "my-mpi-persist") == 0)
+        {
+            start = MPI_Wtime();
+            my_mpi_gatherv_persistent(
+                local_buffer,
+                cnts[rank],
+                MPI_FLOAT,
+                global_buffer,
+                cnts,
+                offsets,
+                MPI_DOUBLE,
+                0,
+                MPI_COMM_WORLD,
+                reqs);
             end = MPI_Wtime();
         }
 

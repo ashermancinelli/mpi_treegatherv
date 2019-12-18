@@ -10,7 +10,8 @@
 #include "mpi.h"
 
 #define UNUSED(x) (void)(x)
-#define MAX_MPI_BITS 10
+#define MAX_MPI_BITS    10
+#define MAX_MPI_RANKS   70
 #define GREEN       "\033[0;32m"
 #define RED         "\033[1;31m"
 #define BLUE        "\033[1;34m"
@@ -46,6 +47,14 @@ extern void my_mpi_gatherv(
         double *recvbuf, int *recvcnts, int *displs,
         MPI_Datatype recvtype, int root, MPI_Comm comm
     );
+
+extern void my_mpi_gatherv_persistent(
+        double *sendbuf, int sendcnt,   MPI_Datatype sendtype,
+        double *recvbuf, int *recvcnts, int *displs,
+        MPI_Datatype recvtype, int root, MPI_Comm comm,
+        MPI_Request* reqs
+    );
+
 #if 0
 
 Tree-based reduce function

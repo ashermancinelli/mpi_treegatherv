@@ -65,6 +65,7 @@ size_t node_data_count(
     return count;
 }
 
+// rank of rightmost child
 inline int min_child_rank(
         int* children,
         int len)
@@ -75,6 +76,7 @@ inline int min_child_rank(
     return min;
 }
 
+// rank of leftmost child
 inline int max_child_rank(
         int* children,
         int len)
@@ -85,14 +87,6 @@ inline int max_child_rank(
     return min;
 }
 
-/*
- * Only using floats for now.
- *
- * See header for algorithm explanation.
- * Using this for reference: http://formalverification.cs.utah.edu/sawaya/html/d0/d70/mpi_2coll_2gather_8c-source.html
- *
- * Only gather with root = 0
- */
 void tree_gatherv_d(
         double * sendbuf, int sendcnt,   MPI_Datatype sendtype,
         double * recvbuf, int *recvcnts, int *displs,
@@ -437,6 +431,17 @@ void tree_gatherv_d_persistent(
         }
 #   endif
 
+    if (rank == 0 && reqs[comm_size-2] != MPI_REQUEST_NULL)
+    {
+        MPI_Startall(comm_size-1, reqs);
+        goto cleanup;
+    }
+    else if (rank != 0 && reqs[0] != MPI_REQUEST_NULL)
+    {
+        MPI_Start(&reqs[0]);
+        goto cleanup;
+    }
+
     for (i=0; i<=bits; i++)
     {
         partner_rank = rank ^ (1<<i);
@@ -495,15 +500,20 @@ void tree_gatherv_d_persistent(
                 MPI_Send_init(recvbuf + displs[rank], cnt,
                     MPI_DOUBLE, partner_rank, 0, comm, &reqs[i]);
             }
-            MPI_Start(&reqs[i]);
 
-            return;
+            MPI_Start(&reqs[i]);
+            goto cleanup;
         }
     }
 
+cleanup:
     if (rank == 0)
     {
         MPI_Waitall(bits, reqs, MPI_STATUSES_IGNORE);
+    }
+    else
+    {
+        MPI_Wait(&reqs[0], MPI_STATUS_IGNORE);
     }
 
     if (root != 0)
@@ -525,7 +535,6 @@ void tree_gatherv_d_persistent(
         fprintf(stdout, "EXIT: rank %d exiting gracefully.\n", rank);
         fflush(stdout);
 #   endif
-
 }
 
 void my_mpi_gatherv(
@@ -533,8 +542,8 @@ void my_mpi_gatherv(
         double *recvbuf, int *recvcnts, int *displs,
         MPI_Datatype recvtype, int root, MPI_Comm comm)
 {
-    int i, rank, comm_size;
-    MPI_Request recs[MAX_MPI_BITS];
+    int i, j, rank, comm_size;
+    MPI_Request reqs[MAX_MPI_RANKS];
 
     UNUSED(recvtype);
     UNUSED(sendtype);
@@ -545,24 +554,73 @@ void my_mpi_gatherv(
     if (rank == root)
     {
         memcpy(recvbuf + displs[rank], sendbuf, sizeof(double)*sendcnt);
+        j = 0;
         for (i=0; i<comm_size; i++)
         {
-            recs[i] = MPI_REQUEST_NULL;
-            if (i == rank)
-            {
-                MPI_Isend(recvbuf + displs[i], recvcnts[i],
-                        MPI_DOUBLE, i, 0, comm, &recs[i]);
-            }
-            else
+            reqs[j] = MPI_REQUEST_NULL;
+            if (i != rank)
             {
                 MPI_Irecv(recvbuf + displs[i], recvcnts[i],
-                        MPI_DOUBLE, i, 0, comm, &recs[i]);
+                        MPI_DOUBLE, i, 0, comm, &reqs[j++]);
             }
         }
-        MPI_Waitall(comm_size, recs, MPI_STATUSES_IGNORE);
+        MPI_Waitall(j, reqs, MPI_STATUSES_IGNORE);
     }
     else
     {
         MPI_Send(sendbuf, sendcnt, MPI_DOUBLE, root, 0, comm);
     }
+}
+
+void my_mpi_gatherv_persistent(
+        double *sendbuf, int sendcnt,   MPI_Datatype sendtype,
+        double *recvbuf, int *recvcnts, int *displs,
+        MPI_Datatype recvtype, int root, MPI_Comm comm,
+        MPI_Request* reqs)
+{
+    int i, j, rank, comm_size;
+
+    UNUSED(recvtype);
+    UNUSED(sendtype);
+
+    MPI_Comm_rank(comm, &rank);
+    MPI_Comm_size(comm, &comm_size);
+
+    if (reqs[0] == MPI_REQUEST_NULL)
+    {
+        for (i=0; i<MAX_MPI_RANKS; i++)
+            reqs[i] = MPI_REQUEST_NULL;
+
+        if (rank == root)
+        {
+            memcpy(recvbuf + displs[rank], sendbuf, sizeof(double)*sendcnt);
+            for (j=0, i=0; i<comm_size; i++)
+            {
+                if (i != rank)
+                    MPI_Recv_init(recvbuf + displs[i], recvcnts[i],
+                            MPI_DOUBLE, i, 0, comm, &reqs[j++]);
+            }
+        }
+        else
+        {
+            MPI_Send_init(sendbuf, sendcnt, MPI_DOUBLE,
+                    root, 0, comm, &reqs[0]);
+        }
+    }
+
+    if (rank == root)
+    {
+        MPI_Start(&reqs[0]);
+        MPI_Wait(&reqs[0], MPI_STATUS_IGNORE);
+    }
+    else
+    {
+        j = 0;
+        for (i=0; i<MAX_MPI_RANKS; i++)
+            if (reqs[i] != MPI_REQUEST_NULL)
+                j++;
+        MPI_Startall(j, reqs);
+        MPI_Waitall(j, reqs, MPI_STATUSES_IGNORE);
+    }
+
 }
