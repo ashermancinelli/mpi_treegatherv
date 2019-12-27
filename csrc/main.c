@@ -187,7 +187,7 @@ int main(int argc, char** argv)
             MPI_Gatherv(
                 local_buffer,
                 cnts[rank],
-                MPI_FLOAT,
+                MPI_DOUBLE,
                 global_buffer,
                 cnts,
                 offsets,
@@ -202,7 +202,7 @@ int main(int argc, char** argv)
             tree_gatherv_d(
                 local_buffer,
                 cnts[rank],
-                MPI_FLOAT,
+                MPI_DOUBLE,
                 global_buffer,
                 cnts,
                 offsets,
@@ -217,7 +217,7 @@ int main(int argc, char** argv)
             tree_gatherv_d_async(
                 local_buffer,
                 cnts[rank],
-                MPI_FLOAT,
+                MPI_DOUBLE,
                 global_buffer,
                 cnts,
                 offsets,
@@ -232,7 +232,7 @@ int main(int argc, char** argv)
             tree_gatherv_d_persistent(
                 local_buffer,
                 cnts[rank],
-                MPI_FLOAT,
+                MPI_DOUBLE,
                 global_buffer,
                 cnts,
                 offsets,
@@ -248,7 +248,7 @@ int main(int argc, char** argv)
             my_mpi_gatherv(
                 local_buffer,
                 cnts[rank],
-                MPI_FLOAT,
+                MPI_DOUBLE,
                 global_buffer,
                 cnts,
                 offsets,
@@ -263,7 +263,7 @@ int main(int argc, char** argv)
             my_mpi_gatherv_persistent(
                 local_buffer,
                 cnts[rank],
-                MPI_FLOAT,
+                MPI_DOUBLE,
                 global_buffer,
                 cnts,
                 offsets,
