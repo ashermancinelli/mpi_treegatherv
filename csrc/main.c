@@ -296,10 +296,10 @@ int main(int argc, char** argv)
         double avg = 0.f;
         sort(elapsed_times, num_loops, sizeof(double));
         fprintf(outfile, "\nIteration\t\tTime\n----------------------------------\n");
-        fprintf(outfile, "%s", GREEN);
         for (i=0; i<num_loops; i++)
         {
-            if (i > top) fprintf(outfile, "%s", RED);
+            if (i > top)    fprintf(outfile, "%s%s", RESET, RED);
+            else            fprintf(outfile, "%s%s", RESET, GREEN);
             fprintf(outfile, "\t%i\t\t%.15f\n", i, elapsed_times[i]);
         }
         fprintf(outfile, "%s", RESET);

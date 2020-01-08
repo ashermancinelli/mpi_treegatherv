@@ -605,17 +605,13 @@ void my_mpi_gatherv_persistent(
         {
             memcpy(recvbuf + displs[rank], sendbuf, sizeof(double)*sendcnt);
             for (j=0, i=0; i<comm_size; i++)
-            {
                 if (i != rank)
                     MPI_Recv_init(recvbuf + displs[i], recvcnts[i],
                             MPI_DOUBLE, i, 0, comm, &reqs[j++]);
-            }
         }
         else
-        {
             MPI_Send_init(sendbuf, sendcnt, MPI_DOUBLE,
                     root, 0, comm, &reqs[0]);
-        }
     }
 
     if (rank != root)
