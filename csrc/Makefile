@@ -19,5 +19,5 @@ opt: $(OBJ)
 	$(CC) $(FFLAGS) -c $< -o $@
 
 clean:
-	if [ -f $(BIN_NAME) ] then; rm $(BIN_NAME); fi
-	rm *.o
+	[ -f $(BIN_NAME) ] && rm $(BIN_NAME)
+	[ -f main.o ] && rm *.o

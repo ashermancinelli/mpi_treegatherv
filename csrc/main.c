@@ -147,19 +147,15 @@ int main(int argc, char** argv)
     for (i=0; i<size; i++)
         cnts[i] = data_per_node;
 
-    if (!rank)
-    {
-        for (i=0; i<size; i++)
-            fprintf(outfile, "cnts[%i] = %i\n", i, cnts[i]);
-        fprintf(outfile, "\n");
-    }
-
     offsets[0] = 0;
     for (j=1; j < size; j++)
         offsets[j] = offsets[j-1] + cnts[j-1];
 
-    if (!rank)
+    if (!rank && display_buf)
     {
+        for (i=0; i<size; i++)
+            fprintf(outfile, "cnts[%i] = %i\n", i, cnts[i]);
+        fprintf(outfile, "\n");
         for (i=0; i<size; i++)
             fprintf(outfile, "offset[%i] = %i\n", i, offsets[i]);
         fprintf(outfile, "\n");
@@ -167,6 +163,7 @@ int main(int argc, char** argv)
         fprintf(outfile, "Looping %d times.\n", num_loops);
         fprintf(outfile, "Using %d data points per node.\n", data_per_node);
         fprintf(outfile, "Using %d procs.\n\n", size);
+        fprintf(outfile, "\n");
         fflush(outfile);
     }
 
@@ -292,6 +289,7 @@ int main(int argc, char** argv)
     if (rank == 0 && display_time)
     {
         int top = (int)(num_loops * keep_percentage - 1);
+        top = top ? top : num_loops;
         fprintf(outfile, "Keeping the top %.2f percent of the benchmarks.\n", keep_percentage*100);
         double avg = 0.f;
         sort(elapsed_times, num_loops, sizeof(double));
@@ -305,6 +303,7 @@ int main(int argc, char** argv)
         fprintf(outfile, "%s", RESET);
         for (i=0; i<top; i++)
             avg += elapsed_times[i]; 
+        fprintf(outfile, "\nsum: %f top: %f\n", avg, top);
         avg /= top;
         fprintf(outfile, "\nAVERAGE\t%s\t%.15f\n",
                 gather_method, avg);
