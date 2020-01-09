@@ -193,19 +193,15 @@ void tree_gatherv_d(
     if (root != 0)
     {
         if (rank == root)
-        {
             MPI_Recv(recvbuf, sum(recvcnts, comm_size),
                     MPI_DOUBLE, 0, 0, comm, MPI_STATUS_IGNORE);
-        }
+
         else if (rank == 0)
-        {
             MPI_Send(recvbuf, sum(recvcnts, comm_size),
                     MPI_DOUBLE, root, 0, comm);
-        }
+
         else
-        {
             return;
-        }
     }
 }
 
@@ -233,13 +229,9 @@ void tree_gatherv_d_async(
      * your send buf to use in-place buf
      */
     if (recvbuf == NULL)
-    {
         recvbuf = sendbuf;
-    }
     else
-    {
         memcpy(recvbuf + displs[rank], sendbuf, sizeof(double)*sendcnt);
-    }
 
     bits = num_bits(comm_size);
 
@@ -256,14 +248,12 @@ void tree_gatherv_d_async(
 #   ifdef __DEBUG
         fprintf(stdout, "%s", BLUE);
         if (rank == root)
-        {
             fprintf(stdout, "\tBits to hold world size: %i\n"
                 "\tComm size capacity: %i\n"
                 "\tComm size: %i\n"
                 "\tOffset from highest rank to "
                 "highest capacity for number of bits: %i\n",
                 bits, 1<<bits, comm_size, (1<<bits)-comm_size);
-        }
 #   endif
 
     for (i=0; i<=bits; i++)
@@ -353,11 +343,9 @@ void tree_gatherv_d_async(
 #   endif
 
     if (rank == 0)
-    {
         // number of bits == number of merges, so
         // root will have to wait on that many recvs
         MPI_Waitall(bits, rec_hdls, MPI_STATUSES_IGNORE);
-    }
 
     /*
      * Gave up on getting smart with the ranks - if
@@ -375,10 +363,8 @@ void tree_gatherv_d_async(
 #           endif
         }
         else if (rank == 0)
-        {
             MPI_Send(recvbuf, sum(recvcnts, comm_size-1),
                     MPI_DOUBLE, root, 0, comm);
-        }
     }
 
 #   ifdef __DEBUG
@@ -409,13 +395,9 @@ void tree_gatherv_d_persistent(
     MPI_Comm_size(comm, &comm_size);
 
     if (recvbuf == NULL)
-    {
         recvbuf = sendbuf;
-    }
     else
-    {
         memcpy(recvbuf + displs[rank], sendbuf, sizeof(double)*sendcnt);
-    }
 
     bits = num_bits(comm_size);
 
@@ -509,10 +491,8 @@ void tree_gatherv_d_persistent(
 #           endif
 
             if (reqs[i] == MPI_REQUEST_NULL)
-            {
                 MPI_Send_init(recvbuf + displs[rank], cnt,
                     MPI_DOUBLE, partner_rank, 0, comm, &reqs[i]);
-            }
 
             MPI_Start(&reqs[i]);
             goto cleanup;
@@ -529,15 +509,12 @@ cleanup:
     if (root != 0)
     {
         if (rank == root)
-        {
             MPI_Recv(recvbuf, sum(recvcnts, comm_size-1),
                     MPI_DOUBLE, 0, 0, comm, MPI_STATUS_IGNORE);
-        }
+
         else if (rank == 0)
-        {
             MPI_Send(recvbuf, sum(recvcnts, comm_size-1),
                     MPI_DOUBLE, root, 0, comm);
-        }
     }
 
 #   ifdef __DEBUG
@@ -569,17 +546,13 @@ void my_mpi_gatherv(
         {
             reqs[j] = MPI_REQUEST_NULL;
             if (i != rank)
-            {
                 MPI_Irecv(recvbuf + displs[i], recvcnts[i],
                         MPI_DOUBLE, i, 0, comm, &reqs[j++]);
-            }
         }
         MPI_Waitall(j, reqs, MPI_STATUSES_IGNORE);
     }
     else
-    {
         MPI_Send(sendbuf, sendcnt, MPI_DOUBLE, root, 0, comm);
-    }
 }
 
 void my_mpi_gatherv_persistent(
@@ -607,7 +580,7 @@ void my_mpi_gatherv_persistent(
             for (j=0, i=0; i<comm_size; i++)
                 if (i != rank)
                     MPI_Recv_init(recvbuf + displs[i], recvcnts[i],
-                            MPI_DOUBLE, i, 0, comm, &reqs[j++]);
+                        MPI_DOUBLE, i, 0, comm, &reqs[j++]);
         }
         else
             MPI_Send_init(sendbuf, sendcnt, MPI_DOUBLE,
