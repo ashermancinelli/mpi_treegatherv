@@ -9,13 +9,15 @@
 method="itree"
 data_per_node=384
 
-cmds=( 'module purge'           \
+cmds=(                          \
+    'module purge'              \
     'module load gcc/7.3.0'     \
     'module load openmpi/3.1.0' \
     'which mpirun'              \
     'which mpicc'               \
     'make opt'                  \
-    'ldd treegather.bin' )
+    'ldd treegather.bin'        \
+)
 
 # printing out commands ran to build and run the program
 for cmd in "${cmds[@]}"
@@ -27,13 +29,8 @@ done
 
 touch start.time
 
-n_loops=150
 data_per_node=384
 n_trials=1
-
-echo
-echo "Running with method: $method"
-echo
 
 mpirun -np 24 ./treegather.bin      \
     --gather-method $method         \
@@ -46,6 +43,5 @@ touch end.time
 echo "Ending"
 
 echo
-echo "Time taken: "
-ls --full-time *.time
+time=$(ls --full-time *.time)
 echo

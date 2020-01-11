@@ -23,21 +23,6 @@ unsigned int sum(int* ar, int count)
 }
 
 /*
- * calculated how many requests the given
- * rank will have to wait on in the persistent
- * communication implementation
- */
-static inline __attribute__((always_inline))
-int calc_num_reqs(int bits, int rank)
-{
-    int n = 0, i;
-    for (i=0; i<=bits; i++)
-        if (rank < (rank ^ (1<<i)))
-            n++;
-    return n;
-}
-
-/*
  * Gets the offset for a node plus the offsets of it's
  * children
  */
@@ -49,6 +34,8 @@ size_t node_data_count(
 {
     size_t count = 0;
     int i, rightmost_child=0;
+
+    // How many partners will this node have?
     for (i=iteration; i>0; i--)
     {
         rightmost_child <<= 1;
@@ -56,12 +43,11 @@ size_t node_data_count(
     }
     rightmost_child += rank;
 
-    for (i=rank; i<=rightmost_child; i++)
-    {
-        if (i >= size)
-            return count;
+    // Sum the counts of each child the node
+    // recieves from
+    for (i=rank; i<=rightmost_child && i>=size; i++)
         count += cnts[i];
-    }
+
     return count;
 }
 
@@ -110,24 +96,18 @@ int tree_gatherv_d(
      * your send buf to use in-place buf
      */
     if (recvbuf == NULL)
-    {
         recvbuf = sendbuf;
-    }
     else
-    {
         memcpy(recvbuf + displs[rank], sendbuf, sizeof(double)*sendcnt);
-    }
 
 #   ifdef __DEBUG
         if (rank == root)
-        {
             fprintf(stdout, "%s\tBits to hold world size: %i\n"
                 "\tComm size capacity: %i\n"
                 "\tComm size: %i\n"
                 "\tOffset from highest rank to "
                 "highest capacity for number of bits: %i\n",
                 BLUE, bits, 1<<bits, comm_size, (1<<bits)-comm_size);
-        }
 #   endif
 
     for (i=0; i<=bits; i++)
