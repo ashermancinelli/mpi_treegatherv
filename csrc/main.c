@@ -24,11 +24,23 @@
 
 char* usage = "Usage:\n"
     "\t--gather-method      (mpi|my-mpi|my-mpi-persist|tree|itree|itree-persist)\n"
-    "\t--display-time=<filename or blank for stdout>\n"
-    "\t--display-buf\n"
+    "\t--output-file=<filename or blank for stdout>\n"
+    "\t--display-buf        (for sanity checking)\n"
     "\t--data-per-node      <int>\n"
     "\t--keep-percentage    <int>\n"
-    "\t--num-loops          <int>\n";
+    "\t--num-loops          <int>\n"
+    "\t--persistent         (use persistent communication)";
+
+int _MPI_Gatherv(
+    double *sendbuf, int sendcnt,   MPI_Datatype sendtype,
+    double *recvbuf, int *recvcnts, int *displs,
+    MPI_Datatype recvtype, int root, MPI_Comm comm)
+{
+    return MPI_Gatherv(
+            (void*)sendbuf, sendcnt, sendtype,
+            (void*)recvbuf, recvcnts, displs,
+            recvtype, root, comm);
+}
 
 static int cmp (const void * a, const void * b)
 {
@@ -47,13 +59,11 @@ int main(int argc, char** argv)
     int rank, size, i, j,
         num_loops = -1, data_per_node = -1;
     bool display_buf = false;
-    bool display_time = false;
+    bool persistent = false;
     double *global_buffer;
     double *local_buffer;
     char gather_method[32];
     FILE* outfile;
-    double start, end;
-    double *elapsed_times;
     float keep_percentage = DEFAULT_KEEP_RATIO;
     MPI_Request reqs[MAX_MPI_RANKS];
 
@@ -66,9 +76,16 @@ int main(int argc, char** argv)
     strcpy(gather_method, "mpi");
     outfile = stdout;
 
-    if (rank == 0)
-        fprintf(outfile, "\n");
-    
+    int (*gatherv_function)(
+        double *sendbuf, int sendcnt,   MPI_Datatype sendtype,
+        double *recvbuf, int *recvcnts, int *displs,
+        MPI_Datatype recvtype, int root, MPI_Comm comm);
+    int (*persistent_gatherv_function)(
+        double *sendbuf, int sendcnt, MPI_Datatype sendtype,
+        double *recvbuf, int *recvcnts, int *displs,
+        MPI_Datatype recvtype, int root, MPI_Comm comm,
+        MPI_Request* reqs);
+
     for (i=0; i<argc; i++)
     {
         if (i == 0)
@@ -77,6 +94,10 @@ int main(int argc, char** argv)
         if (strcmp(argv[i], "--help")==0 ||
             strcmp(argv[i], "-h")==0)
             EXIT();
+        else if (strcmp(argv[i], "--persistent") == 0)
+        {
+            persistent = true;
+        }
         else if (strcmp(argv[i], "--gather-method") == 0)
         {
             if (i == argc+1) 
@@ -86,9 +107,7 @@ int main(int argc, char** argv)
 
             if ((strcmp(gather_method, "mpi") != 0) &&
                     (strcmp(gather_method, "my-mpi") != 0) &&
-                    (strcmp(gather_method, "my-mpi-persist") != 0) &&
                     (strcmp(gather_method, "tree") != 0) &&
-                    (strcmp(gather_method, "itree-persist") != 0) &&
                     (strcmp(gather_method, "itree") != 0))
                 EXIT();
         }
@@ -115,15 +134,6 @@ int main(int argc, char** argv)
 
             data_per_node = atoi(argv[++i]);
         }
-        else if (strstr(argv[i], "--display-time") != NULL)
-        {
-            char *substr = malloc(sizeof(char)*64);
-            if ((substr = strstr(argv[i], "=")) != NULL)
-            {
-                outfile = fopen(++substr, "w+");
-            }
-            display_time = true;
-        }
         else if (strstr(argv[i], "--display-buf") != NULL)
         {
             display_buf = true;
@@ -142,173 +152,104 @@ int main(int argc, char** argv)
 
     global_buffer = malloc(sizeof(double) * size * data_per_node);
     local_buffer = malloc(sizeof(double) * data_per_node);
-    elapsed_times = malloc(sizeof(double) * num_loops);
-
-    for (i=0; i<size; i++)
-        cnts[i] = data_per_node;
 
     offsets[0] = 0;
+    for (i=0; i<size; i++)
+        cnts[i] = data_per_node;
     for (j=1; j < size; j++)
         offsets[j] = offsets[j-1] + cnts[j-1];
+    for (j=0; j<cnts[rank]; j++)
+        local_buffer[j] = (double)(rank + 1);
+    for (i=0; i<MAX_MPI_RANKS; i++) reqs[i] = MPI_REQUEST_NULL;
 
-    if (!rank && display_buf)
+    if (!rank)
     {
-        for (i=0; i<size; i++)
-            fprintf(outfile, "cnts[%i] = %i\n", i, cnts[i]);
-        fprintf(outfile, "\n");
-        for (i=0; i<size; i++)
-            fprintf(outfile, "offset[%i] = %i\n", i, offsets[i]);
-        fprintf(outfile, "\n");
+        if (display_buf)
+        {
+            fprintf(outfile, "Config:\n");
+            for (i=0; i<size; i++)
+                fprintf(outfile, "cnts[%i] = %i\n", i, cnts[i]);
+            fprintf(outfile, "\n");
+            for (i=0; i<size; i++)
+                fprintf(outfile, "offset[%i] = %i\n", i, offsets[i]);
+            fprintf(outfile, "\n");
+        }
         fprintf(outfile, "Using gather method: %s.\n", gather_method);
         fprintf(outfile, "Looping %d times.\n", num_loops);
         fprintf(outfile, "Using %d data points per node.\n", data_per_node);
         fprintf(outfile, "Using %d procs.\n\n", size);
-        fprintf(outfile, "\n");
         fflush(outfile);
     }
 
-    for (i=0; i<MAX_MPI_RANKS; i++) reqs[i] = MPI_REQUEST_NULL;
+    if (strcmp(gather_method, "mpi") == 0)
+        gatherv_function = _MPI_Gatherv;
 
-    for (i=0; i<num_loops; i++)
+    else if (strcmp(gather_method, "tree") == 0)
+        gatherv_function = tree_gatherv_d;
+
+    else if (strcmp(gather_method, "itree") == 0)
+        gatherv_function = tree_gatherv_d_async;
+
+    else if (strcmp(gather_method, "itree") == 0 && persistent)
+        persistent_gatherv_function = tree_gatherv_d_persistent;
+
+    else if (strcmp(gather_method, "my-mpi") == 0)
+        gatherv_function = my_mpi_gatherv;
+
+    else if (strcmp(gather_method, "my-mpi") == 0 && persistent)
+        persistent_gatherv_function = my_mpi_gatherv_persistent;
+
+    // critical loop
+    if (persistent)
     {
-        memset(global_buffer, 0, sizeof(double) * size * data_per_node);
-        memset(local_buffer, 0, sizeof(double) * data_per_node);
-        end = 0;    start = 0;
-
-        for (j=0; j<cnts[rank]; j++)
-            local_buffer[j] = (double)(rank + 1);
-
-        if (strcmp(gather_method, "mpi") == 0)
-        {
-            start = MPI_Wtime();
-            MPI_Gatherv(
-                local_buffer,
-                cnts[rank],
-                MPI_DOUBLE,
-                global_buffer,
-                cnts,
-                offsets,
-                MPI_DOUBLE,
-                0,
-                MPI_COMM_WORLD);
-            end = MPI_Wtime();
-        }
-        else if (strcmp(gather_method, "tree") == 0)
-        {
-            start = MPI_Wtime();
-            tree_gatherv_d(
-                local_buffer,
-                cnts[rank],
-                MPI_DOUBLE,
-                global_buffer,
-                cnts,
-                offsets,
-                MPI_DOUBLE,
-                0,
-                MPI_COMM_WORLD);
-            end = MPI_Wtime();
-        }
-        else if (strcmp(gather_method, "itree") == 0)
-        {
-            start = MPI_Wtime();
-            tree_gatherv_d_async(
-                local_buffer,
-                cnts[rank],
-                MPI_DOUBLE,
-                global_buffer,
-                cnts,
-                offsets,
-                MPI_DOUBLE,
-                0,
-                MPI_COMM_WORLD);
-            end = MPI_Wtime();
-        }
-        else if (strcmp(gather_method, "itree-persist") == 0)
-        {
-            start = MPI_Wtime();
-            tree_gatherv_d_persistent(
-                local_buffer,
-                cnts[rank],
-                MPI_DOUBLE,
-                global_buffer,
-                cnts,
-                offsets,
-                MPI_DOUBLE,
-                0,
-                MPI_COMM_WORLD,
-                reqs);
-            end = MPI_Wtime();
-        }
-        else if (strcmp(gather_method, "my-mpi") == 0)
-        {
-            start = MPI_Wtime();
-            my_mpi_gatherv(
-                local_buffer,
-                cnts[rank],
-                MPI_DOUBLE,
-                global_buffer,
-                cnts,
-                offsets,
-                MPI_DOUBLE,
-                0,
-                MPI_COMM_WORLD);
-            end = MPI_Wtime();
-        }
-        else if (strcmp(gather_method, "my-mpi-persist") == 0)
-        {
-            start = MPI_Wtime();
-            my_mpi_gatherv_persistent(
-                local_buffer,
-                cnts[rank],
-                MPI_DOUBLE,
-                global_buffer,
-                cnts,
-                offsets,
-                MPI_DOUBLE,
-                0,
-                MPI_COMM_WORLD,
-                reqs);
-            end = MPI_Wtime();
-        }
-
-        if (rank == 0)
-        {
-            if (display_buf && i == 0)
-            {
-                for (j=0; j<size*data_per_node; j++)
-                {
-                    fprintf(outfile, "global_buffer[%i] = %lf\n", j, global_buffer[j]);
-                }
-                fflush(outfile);
-            }
-            elapsed_times[i] = end - start;
-        }
-    }
-    free(global_buffer);        free(local_buffer);
-
-    if (rank == 0 && display_time)
-    {
-        int top = (int)(num_loops * keep_percentage - 1);
-        top = top ? top : num_loops;
-        fprintf(outfile, "Keeping the top %.2f percent of the benchmarks.\n", keep_percentage*100);
-        double avg = 0.f;
-        sort(elapsed_times, num_loops, sizeof(double));
-        fprintf(outfile, "\nIteration\t\tTime\n----------------------------------\n");
+        if (!rank)
+            fprintf(stdout, "Running critical loop with "
+                "persistent communication.\n");
         for (i=0; i<num_loops; i++)
         {
-            if (i > top)    fprintf(outfile, "%s%s", RESET, RED);
-            else            fprintf(outfile, "%s%s", RESET, GREEN);
-            fprintf(outfile, "\t%i\t\t%.15f\n", i, elapsed_times[i]);
+            (*persistent_gatherv_function)(
+                local_buffer,
+                cnts[rank],
+                MPI_DOUBLE,
+                global_buffer,
+                cnts,
+                offsets,
+                MPI_DOUBLE,
+                0,
+                MPI_COMM_WORLD,
+                reqs);
         }
-        fprintf(outfile, "%s", RESET);
-        for (i=0; i<top; i++)
-            avg += elapsed_times[i]; 
-        fprintf(outfile, "\nsum: %f top: %f\n", avg, top);
-        avg /= top;
-        fprintf(outfile, "\nAVERAGE\t%s\t%.15f\n",
-                gather_method, avg);
-        fflush(outfile);
     }
+    else
+    {
+        if (!rank)
+            fprintf(stdout, "Running critical loop with "
+                "non-persistent communication.\n");
+        for (i=0; i<num_loops; i++)
+        {
+            (*gatherv_function)(
+                local_buffer,
+                cnts[rank],
+                MPI_DOUBLE,
+                global_buffer,
+                cnts,
+                offsets,
+                MPI_DOUBLE,
+                0,
+                MPI_COMM_WORLD);
+        }
+    }
+
+    if (!rank && display_buf)
+    {
+        fprintf(outfile, "Display buffer: \n");
+        for (i=0; i<data_per_node*size; i++)
+            fprintf(outfile, "%.2f\n", global_buffer[i]);
+        fprintf(outfile, "\n");
+    }
+    // \critical loop
+
+    free(global_buffer);        free(local_buffer);
 
     if (outfile != stdout)
         fclose(outfile);

@@ -23,32 +23,32 @@
  * with a performance boost from the tree
  * structure
  */
-extern void tree_gatherv_d(
+extern int tree_gatherv_d(
         double *sendbuf, int sendcnt, MPI_Datatype sendtype,
         double *recvbuf, int *recvcnts, int *displs,
         MPI_Datatype recvtype, int root, MPI_Comm comm
     );
 
-extern void tree_gatherv_d_async(
+extern int tree_gatherv_d_async(
         double *sendbuf, int sendcnt, MPI_Datatype sendtype,
         double *recvbuf, int *recvcnts, int *displs,
         MPI_Datatype recvtype, int root, MPI_Comm comm
     );
 
-extern void tree_gatherv_d_persistent(
+extern int tree_gatherv_d_persistent(
         double *sendbuf, int sendcnt, MPI_Datatype sendtype,
         double *recvbuf, int *recvcnts, int *displs,
         MPI_Datatype recvtype, int root, MPI_Comm comm,
         MPI_Request* reqs
     );
 
-extern void my_mpi_gatherv(
+extern int my_mpi_gatherv(
         double *sendbuf, int sendcnt,   MPI_Datatype sendtype,
         double *recvbuf, int *recvcnts, int *displs,
         MPI_Datatype recvtype, int root, MPI_Comm comm
     );
 
-extern void my_mpi_gatherv_persistent(
+extern int my_mpi_gatherv_persistent(
         double *sendbuf, int sendcnt,   MPI_Datatype sendtype,
         double *recvbuf, int *recvcnts, int *displs,
         MPI_Datatype recvtype, int root, MPI_Comm comm,

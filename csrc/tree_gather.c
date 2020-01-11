@@ -87,13 +87,14 @@ inline int max_child_rank(
     return min;
 }
 
-void tree_gatherv_d(
+int tree_gatherv_d(
         double * sendbuf, int sendcnt,   MPI_Datatype sendtype,
         double * recvbuf, int *recvcnts, int *displs,
         MPI_Datatype recvtype, int root, MPI_Comm comm)
 {
     int i, rank, comm_size, bits=0, partner_rank;
 
+    // only using doubles
     UNUSED(sendtype);
     UNUSED(recvtype);
 
@@ -201,15 +202,16 @@ void tree_gatherv_d(
                     MPI_DOUBLE, root, 0, comm);
 
         else
-            return;
+            return 0;
     }
+    return 0;
 }
 
 /*
  * Using async recieves. If a sender has pending
  * recvs, wait on all recieves before sending and dying
  */
-void tree_gatherv_d_async(
+int tree_gatherv_d_async(
         double *sendbuf, int sendcnt, MPI_Datatype sendtype,
         double *recvbuf, int *recvcnts, int *displs,
         MPI_Datatype recvtype, int root, MPI_Comm comm)
@@ -323,7 +325,7 @@ void tree_gatherv_d_async(
              * After sending data from node and all valid children,
              * node will never have another recv and can die.
              */
-            return;
+            return 0;
         }
     }
 
@@ -373,20 +375,21 @@ void tree_gatherv_d_async(
         fflush(stdout);
 #   endif
 
+    return 0;
 }
 
 /*
  * parameter reqs must have allocated enough space
  * to hold teh correct number of requests
  */
-void tree_gatherv_d_persistent(
+int tree_gatherv_d_persistent(
         double *sendbuf, int sendcnt, MPI_Datatype sendtype,
         double *recvbuf, int *recvcnts, int *displs,
         MPI_Datatype recvtype, int root, MPI_Comm comm,
         MPI_Request* reqs)
 {
     int i, rank, comm_size, bits=0, partner_rank;
-    static int num_reqs = 0;
+    int num_reqs = 0;
 
     UNUSED(sendtype);
     UNUSED(recvtype);
@@ -414,27 +417,11 @@ void tree_gatherv_d_persistent(
         }
 #   endif
 
-    if (num_reqs != 0)
+    if (reqs[0] != MPI_REQUEST_NULL)
     {
+        while (reqs[num_reqs] != MPI_REQUEST_NULL) num_reqs++;
         MPI_Startall(num_reqs, reqs);
         goto cleanup;
-    }
-    else if (reqs[0] != MPI_REQUEST_NULL)
-    {
-        if (rank == 0)
-        {
-            while (reqs[num_reqs] != MPI_REQUEST_NULL)
-                num_reqs++;
-            MPI_Startall(num_reqs, reqs);
-            goto cleanup;
-        }
-        else
-        {
-            while (reqs[num_reqs] != MPI_REQUEST_NULL)
-                num_reqs++;
-            MPI_Startall(num_reqs, reqs);
-            goto cleanup;
-        }
     }
 
     for (i=0; i<=bits; i++)
@@ -501,8 +488,7 @@ void tree_gatherv_d_persistent(
 
 cleanup:
     if (num_reqs == 0)
-        for (; reqs[num_reqs] != MPI_REQUEST_NULL; num_reqs++)
-            ;
+        while (reqs[num_reqs] != MPI_REQUEST_NULL) num_reqs++;
 
     MPI_Waitall(num_reqs, reqs, MPI_STATUSES_IGNORE);
 
@@ -522,9 +508,10 @@ cleanup:
         fprintf(stdout, "EXIT: rank %d exiting gracefully.\n", rank);
         fflush(stdout);
 #   endif
+    return 0;
 }
 
-void my_mpi_gatherv(
+int my_mpi_gatherv(
         double *sendbuf, int sendcnt,   MPI_Datatype sendtype,
         double *recvbuf, int *recvcnts, int *displs,
         MPI_Datatype recvtype, int root, MPI_Comm comm)
@@ -553,9 +540,11 @@ void my_mpi_gatherv(
     }
     else
         MPI_Send(sendbuf, sendcnt, MPI_DOUBLE, root, 0, comm);
+
+    return 0;
 }
 
-void my_mpi_gatherv_persistent(
+int my_mpi_gatherv_persistent(
         double *sendbuf, int sendcnt,   MPI_Datatype sendtype,
         double *recvbuf, int *recvcnts, int *displs,
         MPI_Datatype recvtype, int root, MPI_Comm comm,
@@ -601,5 +590,5 @@ void my_mpi_gatherv_persistent(
         MPI_Startall(j, reqs);
         MPI_Waitall(j, reqs, MPI_STATUSES_IGNORE);
     }
-
+    return 0;
 }
