@@ -45,7 +45,7 @@ size_t node_data_count(
 
     // Sum the counts of each child the node
     // recieves from
-    for (i=rank; i<=rightmost_child && i>=size; i++)
+    for (i=rank; i<=rightmost_child && i<size; i++)
         count += cnts[i];
 
     return count;
@@ -154,7 +154,7 @@ int tree_gatherv_d(
         {
             int cnt = node_data_count(rank, comm_size, recvcnts, i);
 #           ifdef __DEBUG
-                fprintf(stdout, "SEND %i -> %i (%i data at displ %i) on iter %i\n",
+                fprintf(stdout, "SEND %i -> %i (%i count at displ %i) on iter %i\n",
                         rank, partner_rank, cnt, displs[rank], i);
                 fflush(stdout);
 #           endif
