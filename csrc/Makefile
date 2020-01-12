@@ -21,3 +21,4 @@ opt: $(OBJ)
 clean:
 	[ -f $(BIN_NAME) ] && rm $(BIN_NAME)
 	[ -f main.o ] && rm *.o
+

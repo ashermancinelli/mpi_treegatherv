@@ -170,8 +170,13 @@ int main(int argc, char** argv)
             for (i=0; i<size; i++)
                 fprintf(outfile, "cnts[%i] = %i\n", i, cnts[i]);
             fprintf(outfile, "\n");
+
             for (i=0; i<size; i++)
                 fprintf(outfile, "offset[%i] = %i\n", i, offsets[i]);
+            fprintf(outfile, "\n");
+
+            for (j=0; j<cnts[rank]; j++)
+                fprintf(outfile, "local_buffer[%i] = %.1f\n", j, local_buffer[j]);
             fprintf(outfile, "\n");
         }
         fprintf(outfile, "Using gather method: %s.\n", gather_method);
@@ -182,22 +187,36 @@ int main(int argc, char** argv)
     }
 
     if (strcmp(gather_method, "mpi") == 0)
-        gatherv_function = _MPI_Gatherv;
+    {
+        gatherv_function = &_MPI_Gatherv;
+    }
 
     else if (strcmp(gather_method, "tree") == 0)
-        gatherv_function = tree_gatherv_d;
+    {
+        gatherv_function = &tree_gatherv_d;
+    }
 
     else if (strcmp(gather_method, "itree") == 0)
-        gatherv_function = tree_gatherv_d_async;
+    {
+        gatherv_function = &tree_gatherv_d_async;
+    }
 
     else if (strcmp(gather_method, "itree") == 0 && persistent)
-        persistent_gatherv_function = tree_gatherv_d_persistent;
+    {
+        persistent_gatherv_function = &tree_gatherv_d_persistent;
+    }
 
     else if (strcmp(gather_method, "my-mpi") == 0)
-        gatherv_function = my_mpi_gatherv;
+    {
+        gatherv_function = &my_mpi_gatherv;
+    }
 
     else if (strcmp(gather_method, "my-mpi") == 0 && persistent)
-        persistent_gatherv_function = my_mpi_gatherv_persistent;
+    {
+        persistent_gatherv_function = &my_mpi_gatherv_persistent;
+    }
+
+    fflush(outfile);
 
     // critical loop
     if (persistent)
@@ -207,6 +226,10 @@ int main(int argc, char** argv)
                 "persistent communication.\n");
         for (i=0; i<num_loops; i++)
         {
+            for (j=0; j<cnts[rank]; j++)
+                fprintf(outfile, "MAIN.C RANK(%i) local_buffer[%i] = %.1f\n",
+                        rank, j, local_buffer[j]);
+            fprintf(outfile, "\n");
             (*persistent_gatherv_function)(
                 local_buffer,
                 cnts[rank],
@@ -227,6 +250,10 @@ int main(int argc, char** argv)
                 "non-persistent communication.\n");
         for (i=0; i<num_loops; i++)
         {
+            for (j=0; j<cnts[rank]; j++)
+                fprintf(outfile, "MAIN.C RANK(%i) local_buffer[%i] = %.1f\n",
+                        rank, j, local_buffer[j]);
+            fprintf(outfile, "\n");
             (*gatherv_function)(
                 local_buffer,
                 cnts[rank],
@@ -239,15 +266,15 @@ int main(int argc, char** argv)
                 MPI_COMM_WORLD);
         }
     }
+    // \critical loop
 
     if (!rank && display_buf)
     {
-        fprintf(outfile, "Display buffer: \n");
+        fprintf(outfile, "Global buffer: \n");
         for (i=0; i<data_per_node*size; i++)
-            fprintf(outfile, "%.2f\n", global_buffer[i]);
+            fprintf(outfile, "global_buffer[%i] = %.2f\n", i, global_buffer[i]);
         fprintf(outfile, "\n");
     }
-    // \critical loop
 
     free(global_buffer);        free(local_buffer);
 

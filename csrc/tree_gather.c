@@ -180,9 +180,6 @@ int tree_gatherv_d(
         else if (rank == 0)
             MPI_Send(recvbuf, sum(recvcnts, comm_size),
                     MPI_DOUBLE, root, 0, comm);
-
-        else
-            return 0;
     }
     return 0;
 }
@@ -203,6 +200,10 @@ int tree_gatherv_d_async(
 
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &comm_size);
+
+    for (i=0; i<recvcnts[rank]; i++)
+        fprintf(stdout, "TREE_GATHER.C RANK(%i) local_buffer[%i] = %.1f\n",
+            rank, i, sendbuf[i]);
 
     /*
      * Copy your local bit into the global buf
@@ -259,8 +260,7 @@ int tree_gatherv_d_async(
 #               endif
 
                 MPI_Irecv(recvbuf + displs[partner_rank], cnt, MPI_DOUBLE, 
-                        partner_rank, 0, comm, 
-                        &rec_hdls[i]);
+                        partner_rank, 0, comm, &rec_hdls[i]);
             }
         }
 
@@ -325,9 +325,15 @@ int tree_gatherv_d_async(
 #   endif
 
     if (rank == 0)
+    {
         // number of bits == number of merges, so
         // root will have to wait on that many recvs
         MPI_Waitall(bits, rec_hdls, MPI_STATUSES_IGNORE);
+        int total = sum(recvcnts, comm_size);
+        for (i=0; i<total; i++)
+            fprintf(stdout, "TREE_GATHER.C RANK(%i) global_buffer[%i] = %.1f\n",
+                rank, i, recvbuf[i]);
+    }
 
     /*
      * Gave up on getting smart with the ranks - if
