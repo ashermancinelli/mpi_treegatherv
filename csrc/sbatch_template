@@ -1,21 +1,21 @@
 #! /usr/bin/env bash
 #SBATCH -A ops
-#SBATCH -t 10:00
-#SBATCH -N ###NODES
-#SBATCH -n ###PROCS
+#SBATCH -t {{ TIME }}
+#SBATCH -N {{ NODES }}
+#SBATCH -n {{ PROCS }}
 #SBATCH -p phi
-#SBATCH -o slurm.###HASH.out
-#SBATCH -e slurm.###HASH.err
+#SBATCH -o slurm.{{ HASH }}.out
+#SBATCH -e slurm.{{ HASH }}.err
 
-run_id="###HASH"
-method="###METHOD"
-data_per_node="###DATA"
-num_procs=###PROCS
-num_nodes=###NODES
+run_id="{{ HASH }}"
+method="{{ METHOD }}"
+data_per_node="{{ DATA }}"
+num_procs={{ PROCS }}
+num_nodes={{ NODES }}
 num_loops_sn="5 * (10 ^ 5)"
 # num_loops_sn="10"
 num_loops=$( echo "$num_loops_sn" | bc)
-mpi_version="###MPI"
+mpi_version="{{ MPI }}"
 
 cmds=(                          				\
     "module purge"              				\
@@ -35,12 +35,12 @@ do
     eval $cmd
 done
 
-touch start.###HASH.time
+touch start.{{ HASH }}.time
 mpirun -np $num_procs ./treegather.bin \
     --gather-method $method \
     --num-loops $num_loops \
     --data-per-node $(echo $data_per_node | bc)
-touch end.###HASH.time
+touch end.{{ HASH }}.time
 
 echo
 time=$(ls --full-time start.time end.time \
@@ -48,4 +48,3 @@ time=$(ls --full-time start.time end.time \
     | tr '\n' ';' \
     | sed 's/;//2')
 printf "MPI($mpi_version) DATA/PROC($data_per_node) METHOD($method) NUM PROCS($num_procs) NUM NODES($num_nodes) NUM LOOPS($num_loops_sn)\nTIME($time)\n"
-echo

@@ -5,13 +5,24 @@ import sys
 import glob
 
 def main():
-    filenames = glob.glob('*.txt')
+    filenames = glob.glob('slurm.*.out')
 
     for fn in filenames:
-        with open(filename, 'r') as f:
-            lines = f.readlines()
+        print(f'On filename "{fn}"')
+        f = open(fn, 'r')
+        line = f.readlines()[-1]
+        if 'FINAL TIME' in line:
+            continue
+        else:
+            time = line.split('(')[-1].split(')')[0]
+            t1, t2 = time.split(';')
+            t1 = datetime.strptime(t1[:-3], '%H:%M:%S.%f')
+            t2 = datetime.strptime(t2[:-3], '%H:%M:%S.%f')
+            final_time = abs(t1 - t2)
+            with open(fn, 'a') as wf:
+                wf.writelines([f'FINAL TIME: {final_time}\n'])
 
-    d2 = datetime.strptime('11:10:03.691067241'[:-3], '%H:%M:%S.%f')
+        f.close()
 
 if __name__ == '__main__':
     main()
