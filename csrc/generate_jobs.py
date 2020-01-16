@@ -61,6 +61,7 @@ def main():
                     runscript = runscript.replace('###MPI', str(mpi_mod))
                     runscript = runscript.replace('###DATA', '2 ^ %i' % mem_exp)
                     open('sbatch-%s.sh' % _hash, 'w+').write(runscript)
+                    os.system('sbatch sbatch-%s.sh' % _hash)
                     return
 
 if __name__ == '__main__':

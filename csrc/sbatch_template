@@ -4,15 +4,15 @@
 #SBATCH -N ###NODES
 #SBATCH -n ###PROCS
 #SBATCH -p phi
-#SBATCH -o ###HASH.out
-#SBATCH -e ###HASH.err
+#SBATCH -o slurm.###HASH.out
+#SBATCH -e slurm.###HASH.err
 
 run_id="###HASH"
 method="###METHOD"
 data_per_node="###DATA"
 num_procs=###PROCS
 num_nodes=###NODES
-num_loops_sn="3 * (10 ^ 8)"
+num_loops_sn="5 * (10 ^ 5)"
 # num_loops_sn="10"
 num_loops=$( echo "$num_loops_sn" | bc)
 mpi_version="###MPI"
@@ -35,12 +35,12 @@ do
     eval $cmd
 done
 
-touch ###HASH.start.time
+touch start.###HASH.time
 mpirun -np $num_procs ./treegather.bin \
     --gather-method $method \
     --num-loops $num_loops \
     --data-per-node $(echo $data_per_node | bc)
-touch ###HASH.end.time
+touch end.###HASH.time
 
 echo
 time=$(ls --full-time start.time end.time \
