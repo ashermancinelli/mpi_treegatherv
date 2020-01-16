@@ -27,7 +27,6 @@ char* usage = "Usage:\n"
     "\t--output-file=<filename or blank for stdout>\n"
     "\t--display-buf        (for sanity checking)\n"
     "\t--data-per-node      <int>\n"
-    "\t--keep-percentage    <int>\n"
     "\t--num-loops          <int>\n"
     "\t--persistent         (use persistent communication)";
 
@@ -54,6 +53,12 @@ void sort(void* base, size_t n, size_t size)
     qsort(base, n, size, cmp);
 }
 
+void incr(double *ar, int len)
+{
+    int i;
+    for (i=0; i<len; i++) ar[i]++;
+}
+
 int main(int argc, char** argv)
 {
     int rank, size, i, j,
@@ -64,7 +69,6 @@ int main(int argc, char** argv)
     double *local_buffer;
     char gather_method[32];
     FILE* outfile;
-    float keep_percentage = DEFAULT_KEEP_RATIO;
     MPI_Request reqs[MAX_MPI_RANKS];
 
     MPI_Init(&argc, &argv);
@@ -118,15 +122,6 @@ int main(int argc, char** argv)
 
             num_loops = atoi(argv[++i]);
         }
-        else if (strcmp(argv[i], "--keep-percentage") == 0)
-        {
-            if (i == argc+1) 
-                EXIT();
-
-            keep_percentage = (float)atoi(argv[++i]) / 100;
-            if (keep_percentage > 1.f || keep_percentage < 0.f)
-                EXIT();
-        }
         else if (strcmp(argv[i], "--data-per-node") == 0)
         {
             if (i == argc+1) 
@@ -140,6 +135,8 @@ int main(int argc, char** argv)
         }
         else
         {
+            if (!rank)
+                fprintf(outfile, "%scommand '%s' not found.%s\n", RED, argv[i], RESET);
             EXIT();
         }
     }
@@ -196,7 +193,7 @@ int main(int argc, char** argv)
         gatherv_function = &tree_gatherv_d;
     }
 
-    else if (strcmp(gather_method, "itree") == 0)
+    else if (strcmp(gather_method, "itree") == 0 && !persistent)
     {
         gatherv_function = &tree_gatherv_d_async;
     }
@@ -206,7 +203,7 @@ int main(int argc, char** argv)
         persistent_gatherv_function = &tree_gatherv_d_persistent;
     }
 
-    else if (strcmp(gather_method, "my-mpi") == 0)
+    else if (strcmp(gather_method, "my-mpi") == 0 && !persistent)
     {
         gatherv_function = &my_mpi_gatherv;
     }
@@ -226,10 +223,12 @@ int main(int argc, char** argv)
                 "persistent communication.\n");
         for (i=0; i<num_loops; i++)
         {
+#ifdef __DEBUG
             for (j=0; j<cnts[rank]; j++)
                 fprintf(outfile, "MAIN.C RANK(%i) local_buffer[%i] = %.1f\n",
                         rank, j, local_buffer[j]);
             fprintf(outfile, "\n");
+#endif
             (*persistent_gatherv_function)(
                 local_buffer,
                 cnts[rank],
@@ -250,10 +249,12 @@ int main(int argc, char** argv)
                 "non-persistent communication.\n");
         for (i=0; i<num_loops; i++)
         {
+#ifdef __DEBUG
             for (j=0; j<cnts[rank]; j++)
                 fprintf(outfile, "MAIN.C RANK(%i) local_buffer[%i] = %.1f\n",
                         rank, j, local_buffer[j]);
             fprintf(outfile, "\n");
+#endif
             (*gatherv_function)(
                 local_buffer,
                 cnts[rank],

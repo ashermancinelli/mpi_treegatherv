@@ -201,9 +201,11 @@ int tree_gatherv_d_async(
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &comm_size);
 
+#   ifdef __DEBUG
     for (i=0; i<recvcnts[rank]; i++)
         fprintf(stdout, "TREE_GATHER.C RANK(%i) local_buffer[%i] = %.1f\n",
             rank, i, sendbuf[i]);
+#   endif
 
     /*
      * Copy your local bit into the global buf
@@ -330,9 +332,11 @@ int tree_gatherv_d_async(
         // root will have to wait on that many recvs
         MPI_Waitall(bits, rec_hdls, MPI_STATUSES_IGNORE);
         int total = sum(recvcnts, comm_size);
+#ifdef __DEBUG
         for (i=0; i<total; i++)
             fprintf(stdout, "TREE_GATHER.C RANK(%i) global_buffer[%i] = %.1f\n",
                 rank, i, recvbuf[i]);
+#endif
     }
 
     /*
