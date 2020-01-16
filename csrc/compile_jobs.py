@@ -90,7 +90,7 @@ def main():
                     })
                     open('sbatch-%s.sh' % _hash, 'w+').write(str(script))
                     os.system('sbatch sbatch-%s.sh' % _hash)
-                return
+                    return
 
 if __name__ == '__main__':
     main()
