@@ -60,13 +60,13 @@ class RunScript:
     def sub(self, sub_dict):
         for k, v in sub_dict.items():
             self.script = re.sub(r'\{\{\s?' + k + r'\s?\}\}', str(v), self.script)
+            print(f'Subbing {k} for {v}')
 
     def __str__(self):
         return self.script
 
 def main():
     script = RunScript(open('sbatch_template', 'r').read())
-    runs = 0
     for mem_exp in range(19, 23):
         for n, N in combinations:
             for mpi_mod in mpi_versions:
@@ -80,19 +80,17 @@ def main():
                     guess at how long it will take
                     '''
                     script.sub({
-                        'HASH':		    _hash,
-                        'TIME':		    '20:00',
-                        'NODES':		N,
-                        'PROCS':		n,
-                        'METHOD':	    method,
-                        'MPI':		    mpi_mod,
-                        'DATA':		    '2 ^ %i' % mem_exp,
+                        'hash':		    _hash,
+                        'time':		    '20:00',
+                        'nodes':		N,
+                        'procs':		n,
+                        'method':	    method,
+                        'mpi':		    mpi_mod,
+                        'data':		    '2 ^ %i' % mem_exp,
                     })
                     open('sbatch-%s.sh' % _hash, 'w+').write(str(script))
                     os.system('sbatch sbatch-%s.sh' % _hash)
-                    runs += 1
-                    if runs > 3:
-                        return
+                return
 
 if __name__ == '__main__':
     main()

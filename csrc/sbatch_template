@@ -1,21 +1,21 @@
 #! /usr/bin/env bash
 #SBATCH -A ops
-#SBATCH -t {{ TIME }}
-#SBATCH -N {{ NODES }}
-#SBATCH -n {{ PROCS }}
+#SBATCH -t {{ time }}
+#SBATCH -N {{ nodes }}
+#SBATCH -n {{ procs }}
 #SBATCH -p phi
-#SBATCH -o slurm.{{ HASH }}.out
-#SBATCH -e slurm.{{ HASH }}.err
+#SBATCH -o slurm.{{ hash }}.out
+#SBATCH -e slurm.{{ hash }}.err
 
-run_id="{{ HASH }}"
-method="{{ METHOD }}"
-data_per_node="{{ DATA }}"
-num_procs={{ PROCS }}
-num_nodes={{ NODES }}
+run_id="{{ hash }}"
+method="{{ method }}"
+data_per_node="{{ data }}"
+num_procs={{ procs }}
+num_nodes={{ nodes }}
 num_loops_sn="5 * (10 ^ 5)"
 # num_loops_sn="10"
 num_loops=$( echo "$num_loops_sn" | bc)
-mpi_version="{{ MPI }}"
+mpi_version="{{ mpi }}"
 
 cmds=(                          				\
     "module purge"              				\
@@ -35,15 +35,15 @@ do
     eval $cmd
 done
 
-touch start.{{ HASH }}.time
+touch start.{{ hash }}.time
 mpirun -np $num_procs ./treegather.bin \
     --gather-method $method \
     --num-loops $num_loops \
     --data-per-node $(echo $data_per_node | bc)
-touch end.{{ HASH }}.time
+touch end.{{ hash }}.time
 
 echo
-time=$(ls --full-time start.time end.time \
+time=$(ls --full-time start.{{ hash }}.time end.{{ hash }}.time \
     | cut -f7 -d' ' \
     | tr '\n' ';' \
     | sed 's/;//2')
