@@ -24,6 +24,7 @@ cmds=(                          				\
     "which mpirun"              				\
     "which mpicc"               				\
     "make opt"                  				\
+    "chmod +x treegather.bin"                   \
     "ldd treegather.bin"        				\
 )
 
@@ -36,7 +37,7 @@ do
 done
 
 touch start.{{ hash }}.time
-mpirun -np $num_procs ./treegather.bin \
+mpirun -n $num_procs $(pwd)/treegather.bin \
     --gather-method $method \
     --num-loops $num_loops \
     --data-per-node $(echo $data_per_node | bc)

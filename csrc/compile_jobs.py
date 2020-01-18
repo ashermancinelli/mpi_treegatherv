@@ -6,35 +6,38 @@ from datetime import datetime
 import re
 
 combinations = [
-    [2, 1],
-    [2, 2],
-	[4, 1],
-	[4, 2],
-	[4, 4],
-	[8, 1],
-	[8, 2],
-	[8, 4],
-	[12, 1],
-	[12, 2],
-	[12, 4],
-	[16, 1],
-	[16, 2],
-	[16, 4],
-	[24, 1],
-	[24, 2],
-	[24, 4],
-	[24, 6],
-	[36, 2],
-	[36, 4],
-	[48, 2],
-	[48, 4],
-	[48, 6],
-	[72, 4],
-	[72, 6],
-	[96, 4],
-	[96, 6],
-	[144, 6],
+    [2,	    1,	30],
+    [2,	    2,	30],
+	[4,	    1,	60],
+	[4,	    2,	60],
+	[4,	    4,	60],
+	[8,	    1,	80],
+	[8,	    2,	80],
+	[8,	    4,	80],
 ]
+'''
+	[12,	1,	80],
+	[12,	2,	80],
+	[12,	4,	80],
+	[16,	1,	80],
+	[16,	2,	80],
+	[16,	4,	80],
+	[24,	1,	100],
+	[24,	2,	100],
+	[24,	4,	100],
+	[24,	6,	100],
+	[36,	2,	120],
+	[36,	4,	120],
+	[48,	2,	120],
+	[48,	4,	120],
+	[48,	6,	120],
+	[72,	4,	140],
+	[72,	6,	140],
+	[96,	4,	140],
+	[96,	6,	140],
+	[144,	6,	150],
+]
+'''
 
 mpi_versions = [
     'openmpi/3.1.0',
@@ -67,13 +70,16 @@ class RunScript:
 
 def main():
     script = RunScript(open('sbatch_template', 'r').read())
-    for mem_exp in range(19, 23):
-        for n, N in combinations:
-            for mpi_mod in mpi_versions:
+    for mpi_mod in mpi_versions:
+        for n, N, t in combinations:
+            for mem_exp in range(19, 23):
                 for method in methods:
                     script.reset()
 
                     _hash = hashlib.md5(str(datetime.now()).encode()).hexdigest()
+
+                    # Convert from minutes to slurm format
+                    time = f'{t // 60}:{t % 60}:00'
 
                     '''
                     TODO set the time value based on some heuristic or 
@@ -81,7 +87,7 @@ def main():
                     '''
                     script.sub({
                         'hash':		    _hash,
-                        'time':		    '20:00',
+                        'time':         time,
                         'nodes':		N,
                         'procs':		n,
                         'method':	    method,
@@ -90,7 +96,6 @@ def main():
                     })
                     open('sbatch-%s.sh' % _hash, 'w+').write(str(script))
                     os.system('sbatch sbatch-%s.sh' % _hash)
-                    return
 
 if __name__ == '__main__':
     main()

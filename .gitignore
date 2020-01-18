@@ -2,3 +2,7 @@
 *.swo
 *.bin
 *.out
+*.time
+sbatch-*.sh
+*.err
+*.out
