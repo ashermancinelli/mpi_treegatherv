@@ -4,8 +4,8 @@
 #SBATCH -N {{ nodes }}
 #SBATCH -n {{ procs }}
 #SBATCH -p phi
-#SBATCH -o slurm.{{ hash }}.out
-#SBATCH -e slurm.{{ hash }}.err
+#SBATCH -o outputs/slurm.{{ hash }}.out
+#SBATCH -e outputs/slurm.{{ hash }}.err
 
 run_id="{{ hash }}"
 method="{{ method }}"
@@ -26,7 +26,7 @@ cmds=(                          				\
     "make opt"                  				\
     "chmod +x treegather.bin"                   \
     "ldd treegather.bin"        				\
-)
+    )
 
 # printing out commands ran to build and run the program
 for cmd in "${cmds[@]}"
@@ -36,16 +36,16 @@ do
     eval $cmd
 done
 
-touch start.{{ hash }}.time
+touch 'time/start.{{ hash }}.time'
 mpirun -n $num_procs $(pwd)/treegather.bin \
     --gather-method $method \
     --num-loops $num_loops \
     --data-per-node $(echo $data_per_node | bc)
-touch end.{{ hash }}.time
+touch 'time/end.{{ hash }}.time'
 
 echo
-time=$(ls --full-time start.{{ hash }}.time end.{{ hash }}.time \
+time=$(ls --full-time 'time/start.{{ hash }}.time' 'time/end.{{ hash }}.time' \
     | cut -f7 -d' ' \
     | tr '\n' ';' \
     | sed 's/;//2')
-printf "MPI($mpi_version) DATA/PROC($data_per_node) METHOD($method) NUM PROCS($num_procs) NUM NODES($num_nodes) NUM LOOPS($num_loops_sn)\nTIME($time)\n"
+printf "{\"mpi\": \"$mpi_version\", \"data_per_proc\": \"$data_per_node\", \"method\": \"$method\", \"num_procs\": \"$num_procs\", \"num_nodes\": \"$num_nodes\", \"num_loops\": \"$num_loops_sn\", \"time\": \"$time\"}\n"
