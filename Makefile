@@ -28,12 +28,13 @@ endif
 ifeq ($(USE_LOCAL_MPI),1)
 # Use the mpi we build in travis container
 export CC 						= $(abspath ./mpich/bin/mpicc)
-export host_CC 				= gcc
+export HOSTCC 				= gcc
 export CFLAGS					+= -I$(abspath ./mpich/include) -L$(abspath ./mpich/lib) -Wl,-rpath=$(abspath ./mpich/lib)
 export MPIRUN					= $(abspath ./mpich/bin/mpirun)
 else
 export CC				      = mpicc
-export host_CC        = $(shell mpicc -showme | cut -f1 -d' ')
+export HOSTCC         = $(shell mpicc -showme | cut -f1 -d' ')
+MPIRUN								= mpirun
 endif
 
 all: info
@@ -56,7 +57,7 @@ info:
 	@echo
 	@echo CC $(CC)
 	@echo
-	@echo host_CC $(host_CC)
+	@echo HOSTCC $(HOSTCC)
 	@echo
 	@echo CFLAGS $(CFLAGS)
 	@echo
@@ -87,6 +88,7 @@ check: install
 	@echo
 	@echo MPI_Gatherv tests passed
 	@echo
+	make -C src check
 	make -C tools check
 
 clean:

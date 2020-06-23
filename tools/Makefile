@@ -1,6 +1,6 @@
 
-ifeq ($(host_CC),)
-host_CC = cc
+ifeq ($(HOSTCC),)
+HOSTCC = cc
 endif
 
 ifeq ($(BINDIR),)
@@ -8,7 +8,7 @@ BINDIR=.
 endif
 
 all:
-	$(host_CC) $(CFLAGS) bench.c -o $(BINDIR)/bench.bin
+	$(HOSTCC) $(CFLAGS) bench.c -o $(BINDIR)/bench.bin
 
 check:
 	if [ ! $(shell echo '19:37:58.792808359 19:37:55.812240374' | $(BINDIR)/bench.bin) -eq 19429015 ]; then exit 1; fi

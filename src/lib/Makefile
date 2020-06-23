@@ -10,3 +10,5 @@ all: $(OBJ)
 
 clean:
 
+check: all
+	$(MAKE) -C tests
