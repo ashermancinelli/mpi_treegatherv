@@ -1,6 +1,9 @@
 sudo: false
 language: c
 compiler: gcc
+env:
+  - USE_LOCAL_MPI=1
+
 cache:
   directories:
     - mpich
