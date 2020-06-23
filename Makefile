@@ -26,13 +26,13 @@ else ifeq ($(BUILD_TYPE),release)
 export CFLAGS         += -O3
 endif
 
-all: showme
+all: info
 	if [ ! -d $(BINDIR) ]; then mkdir -p $(BINDIR); fi
 	if [ ! -d $(INCDIR) ]; then mkdir -p $(INCDIR); fi
 	$(MAKE) -C src
 	$(MAKE) -C tools
 
-showme:
+info:
 	@echo
 	@echo BUILD_TYPE $(BUILD_TYPE)
 	@echo
@@ -54,7 +54,7 @@ showme:
 install: all
 	if [ ! -d $(PREFIX)/bin ]; then mkdir -p $(PREFIX)/bin; fi
 	if [ ! -d $(PREFIX)/include ]; then mkdir -p $(PREFIX)/include; fi
-	if [ ! -z "$(PREFIX)" ]; then install $(BIN_NAME) $(PREFIX)/bin/$(BIN_NAME_SHORT); fi
+	if [ ! -z "$(PREFIX)" ]; then install $(BINDIR)/* $(PREFIX)/bin/; fi
 	cp $(INCDIR)/* $(PREFIX)/include
 
 check: install
