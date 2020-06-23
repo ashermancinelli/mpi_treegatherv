@@ -10,6 +10,5 @@ cache:
 before_install:
   - sh ./.get_mpich.sh
 script:
-  - ls -R .
   - make check BUILD_TYPE=release
 
