@@ -7,7 +7,6 @@ void parse_args(int * _argc, char *** _argv, struct options * opts)
   int argc = *_argc;
   char ** argv = *_argv;
   int rank=opts->rank;
-  printf("Opts: rank: %d size: %d\n", opts->rank, opts->size);
 
   int i;
   for (i=1; i<argc; i++)
