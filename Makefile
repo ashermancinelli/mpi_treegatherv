@@ -12,6 +12,7 @@ export BINDIR		      = $(BUILDDIR)/bin
 export INCDIR		      = $(BUILDDIR)/include
 export BIN_NAME_SHORT = treegather.bin
 export BIN_NAME	 			= $(BINDIR)/$(BIN_NAME_SHORT)
+export MPIRUN_ARGS		= -np 2
 
 export CFLAGS		      =  -Wall
 export CFLAGS         += -I$(INCDIR)
@@ -29,6 +30,7 @@ ifeq ($(USE_LOCAL_MPI),1)
 export CC 						= $(abspath ./mpich/bin/mpicc)
 export host_CC 				= gcc
 export CFLAGS					+= -I$(abspath ./mpich/include) -L$(abspath ./mpich/lib) -Wl,-rpath=$(abspath ./mpich/lib)
+export MPIRUN					= $(abspath ./mpich/bin/mpirun)
 else
 export CC				      = mpicc
 export host_CC        = $(shell mpicc -showme | cut -f1 -d' ')
@@ -66,21 +68,21 @@ install: all
 	cp $(INCDIR)/* $(PREFIX)/include
 
 check: install
-	$(BIN_NAME) --data-per-node 1024 --gather-method mpi 		\
+	$(MPIRUN) $(MPIRUN_ARGS) $(BIN_NAME) --data-per-node 1024 --gather-method mpi 		\
 			--num-loops 10 		|| exit 1
-	$(BIN_NAME) --data-per-node 1024 --gather-method my-mpi \
+	$(MPIRUN) $(MPIRUN_ARGS) $(BIN_NAME) --data-per-node 1024 --gather-method my-mpi \
 			--num-loops 10 		|| exit 1
-	$(BIN_NAME) --data-per-node 1024 --gather-method tree 	\
+	$(MPIRUN) $(MPIRUN_ARGS) $(BIN_NAME) --data-per-node 1024 --gather-method tree 	\
 			--num-loops 10 		|| exit 1
-	$(BIN_NAME) --data-per-node 1024 --gather-method itree 	\
+	$(MPIRUN) $(MPIRUN_ARGS) $(BIN_NAME) --data-per-node 1024 --gather-method itree 	\
 			--num-loops 10 		|| exit 1
-	$(BIN_NAME) --data-per-node 1024 --gather-method mpi 		\
+	$(MPIRUN) $(MPIRUN_ARGS) $(BIN_NAME) --data-per-node 1024 --gather-method mpi 		\
 			--num-loops 10 --persist		|| exit 1
-	$(BIN_NAME) --data-per-node 1024 --gather-method my-mpi \
+	$(MPIRUN) $(MPIRUN_ARGS) $(BIN_NAME) --data-per-node 1024 --gather-method my-mpi \
 			--num-loops 10 --persist		|| exit 1
-	$(BIN_NAME) --data-per-node 1024 --gather-method tree 	\
+	$(MPIRUN) $(MPIRUN_ARGS) $(BIN_NAME) --data-per-node 1024 --gather-method tree 	\
 			--num-loops 10 --persist		|| exit 1
-	$(BIN_NAME) --data-per-node 1024 --gather-method itree 	\
+	$(MPIRUN) $(MPIRUN_ARGS) $(BIN_NAME) --data-per-node 1024 --gather-method itree 	\
 			--num-loops 10 --persist		|| exit 1
 	@echo
 	@echo MPI_Gatherv tests passed
