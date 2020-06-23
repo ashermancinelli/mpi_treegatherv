@@ -10,6 +10,27 @@
 #define MINS SECS * 60
 #define HRS MINS * 60
 
+/*
+ * Small utility intended to find the difference between two
+ * high-precision times.
+ * For example, touching a file before and after running a binary
+ * leaves me with two files, which I then ls like so:
+ *
+ * ~~~~~~~~~~{console}
+ * $ ls --full-time start end
+ * -rw-r--r-- 1 manc568 users 0 2020-06-22 20:34:48.512293728 -0700 start
+ * -rw-r--r-- 1 manc568 users 0 2020-06-22 20:34:48.516546118 -0700 end
+ * ~~~~~~~~~~
+ *
+ * I would like to parse the times and find the difference in miliseconds:
+ *
+ * ~~~~~~~~~~{console}
+ * $ ls --full-time start end | cut -f7 -d' ' | bench.bin
+ * 19429015
+ * ~~~~~~~~~~
+ *
+ */
+
 typedef union
 {
   int vals[4];

@@ -17,3 +17,4 @@ check:
 	@echo
 
 clean:
+	if [ -d bench.bin ]; then rm bench.bin; fi

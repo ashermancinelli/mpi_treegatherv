@@ -1,4 +1,5 @@
-# mpi_treegatherv
+Tree-based MPI GatherV implementation
+---
 
 A tree-based gathering function to reduce cost of a gatherv call
 
@@ -12,7 +13,8 @@ So far just tested on:
 ## Installation
 
 ```console
-$ make install -j 4 PREFIX=/some/dir
+$ make check
+$ make install PREFIX=/some/dir
 ```
 
 ## Testing
@@ -23,30 +25,7 @@ improvements, but would need more rigerous testing to ensure a
 worthwhile speedup.
 
 The asynchronous version of the gatherv function however, `tree_gatherv_d_async`,
-showed very significant speedups. For example:
+showed very significant speedups.
 
-```bash
-> # using 384 doubles per proc
-> time mpirun -np 24 ./treegather.bin --gather-method mpi
-
-time mpirun -np 24 ./treegather.bin --gather-method mpi
-
-Using gather method: mpi.
-mpirun -np 24 ./treegather.bin --gather-method mpi  0.48s user 0.46s system 1346% cpu 0.070 total
-> time mpirun -np 24 ./treegather.bin --gather-method tree
-
-time mpirun -np 24 ./treegather.bin --gather-method tree
-
-Using gather method: tree.
-mpirun -np 24 ./treegather.bin --gather-method tree  1.10s user 0.49s system 1482% cpu 0.107 total
-> time mpirun -np 24 ./treegather.bin --gather-method itree
-
-time mpirun -np 24 ./treegather.bin --gather-method itree
-
-Using gather method: itree.
-mpirun -np 24 ./treegather.bin --gather-method itree  0.17s user 0.52s system 1091% cpu 0.064 total
-```
-
-As we can see, using the `itree` parameter, which calls `tree_gatherv_d_async`, runs
-__much__, __much__ faster than any of the other algorithms.
+To see tests, run `make check`.
 
