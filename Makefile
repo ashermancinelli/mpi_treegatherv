@@ -7,15 +7,6 @@ ifeq ($(PREFIX),)
 PREFIX=./install
 endif
 
-ifeq ($(USE_LOCAL_MPI),1)
-# Use the mpi we build in travis container
-export CC 						= $(abspath ./mpich/bin/mpicc)
-export host_CC 				= gcc
-else
-export CC				      = mpicc
-export host_CC        = $(shell mpicc -showme | cut -f1 -d' ')
-endif
-
 export BUILDDIR	      = $(shell pwd)/build
 export BINDIR		      = $(BUILDDIR)/bin
 export INCDIR		      = $(BUILDDIR)/include
@@ -31,6 +22,16 @@ export CFLAGS         += -O0
 export CFLAGS         += -g
 else ifeq ($(BUILD_TYPE),release)
 export CFLAGS         += -O3
+endif
+
+ifeq ($(USE_LOCAL_MPI),1)
+# Use the mpi we build in travis container
+export CC 						= $(abspath ./mpich/bin/mpicc)
+export host_CC 				= gcc
+export CFLAGS					+= -I$(abspath ./mpich/include)
+else
+export CC				      = mpicc
+export host_CC        = $(shell mpicc -showme | cut -f1 -d' ')
 endif
 
 all: info
