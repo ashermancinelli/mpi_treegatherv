@@ -6,7 +6,7 @@ all: $(OBJ)
 	cp *.h $(INCDIR)
 
 %.o: %.c
-	$(CC) -c $< $(CFLAGS) -o $(BUILDDIR)/$@
+	$(CC) 			-c $< 		$(CFLAGS) 			-o $(BUILDDIR)/$@
 
 clean:
 

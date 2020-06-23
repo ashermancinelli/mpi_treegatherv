@@ -65,19 +65,9 @@ int main(int argc, char** argv)
   char buf[BUFSIZ];
   time_fmt t1, t2;
   fgets(buf, sizeof(buf), stdin);
-  if (buf[strlen(buf)-1]=='\n')
-  {
-    sscanf(buf, "%d:%d:%d.%d %d:%d:%d.%d",
-        &t1.h, &t1.m, &t1.s, &t1.ms,
-        &t2.h, &t2.m, &t2.s, &t2.ms);
-  }
-  else
-  {
-    assert(false && "Buffer was truncated");
-  }
-
-  // printf("T1:\n\thrs:%d\n\tmin:%d\n\tsec:%d\n\tms:%d\n", t1.vals[0], t1.vals[1], t1.vals[2], t1.vals[3]);
-  // printf("T2:\n\thrs:%d\n\tmin:%d\n\tsec:%d\n\tms:%d\n", t2.vals[0], t2.vals[2], t2.vals[2], t2.vals[3]);
+  sscanf(buf, "%d:%d:%d.%d %d:%d:%d.%d",
+      &t1.h, &t1.m, &t1.s, &t1.ms,
+      &t2.h, &t2.m, &t2.s, &t2.ms);
 
   long int abs1 = abs_time(&t1);
   long int abs2 = abs_time(&t2);

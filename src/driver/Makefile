@@ -1,7 +1,7 @@
 
 OBJS = $(wildcard $(BUILDDIR)/*.o)
 all:
-	$(CC) $(CFLAGS) main.c $(OBJS) -o $(BIN_NAME)
+	$(CC) 			main.c $(OBJS) 			-o $(BIN_NAME) $(CFLAGS)
 
 clean:
 
