@@ -8,6 +8,7 @@ BINDIR=.
 endif
 
 all:
+	@echo
 	$(HOSTCC) $(CFLAGS) bench.c -o $(BINDIR)/bench.bin
 
 check:

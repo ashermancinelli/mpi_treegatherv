@@ -6,4 +6,5 @@ all: test_tree_gather
 	@echo
 
 test_tree_gather: tree_gather.c
+	@echo
 	$(CC)				$<			$(BUILDDIR)/*.o -o $(BINDIR)/$@		$(CFLAGS)

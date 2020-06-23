@@ -37,6 +37,10 @@ export HOSTCC         = $(shell mpicc -showme | cut -f1 -d' ')
 MPIRUN								= mpirun
 endif
 
+# Use absolute paths
+CC										:= $(shell which $(CC))
+HOSTCC								:= $(shell which $(HOSTCC))
+
 all: info
 	if [ ! -d $(BINDIR) ]; then mkdir -p $(BINDIR); fi
 	if [ ! -d $(INCDIR) ]; then mkdir -p $(INCDIR); fi
@@ -44,22 +48,21 @@ all: info
 	$(MAKE) -C tools
 
 info:
+	@printf 'BUILD_TYPE\t\t$(BUILD_TYPE)'
 	@echo
-	@echo BUILD_TYPE $(BUILD_TYPE)
+	@printf 'BUILDIDR\t\t$(BUILDDIR)'
 	@echo
-	@echo BUILDIDR $(BUILDDIR)
+	@printf 'BINDIR\t\t\t$(BINDIR)'
 	@echo
-	@echo BINDIR $(BINDIR)
+	@printf 'INCIDR\t\t\t$(INCDIR)'
 	@echo
-	@echo INCIDR $(INCDIR)
+	@printf 'BINNAME\t\t\t$(BIN_NAME_SHORT)'
 	@echo
-	@echo BIN NAME $(BIN_NAME_SHORT)
+	@printf 'CC\t\t\t$(CC)'
 	@echo
-	@echo CC $(CC)
+	@printf 'HOSTCC\t\t\t$(HOSTCC)'
 	@echo
-	@echo HOSTCC $(HOSTCC)
-	@echo
-	@echo CFLAGS $(CFLAGS)
+	@printf 'CFLAGS\t\t\t$(CFLAGS)'
 	@echo
 
 install: all
