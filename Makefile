@@ -8,7 +8,8 @@ PREFIX=./install
 endif
 
 ifeq ($(USE_LOCAL_MPI),1)
-export CC 						= ./mpich/bin/mpicc
+# Use the mpi we build in travis container
+export CC 						= $(abspath ./mpich/bin/mpicc)
 export host_CC 				= gcc
 else
 export CC				      = mpicc
