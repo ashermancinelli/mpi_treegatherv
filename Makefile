@@ -25,6 +25,10 @@ else ifeq ($(BUILD_TYPE),release)
 export CFLAGS         += -O3
 endif
 
+ifeq ($(USE_BARRIERS),1)
+export CFLAGS					+= -DUSE_BARRIERS
+endif
+
 ifeq ($(USE_LOCAL_MPI),1)
 # Use the mpi we build in travis container
 export CC 						= $(abspath ./mpich/bin/mpicc)

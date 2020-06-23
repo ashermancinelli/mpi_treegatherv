@@ -122,7 +122,9 @@ int main(int argc, char** argv)
             opts.rank, j, local_buffer[j]);
       fprintf(opts.outfile, "\n");
 #endif
+#ifdef USE_BARRIERS
       assert(MPI_Barrier(MPI_COMM_WORLD)==MPI_SUCCESS);
+#endif
       (*persistent_gatherv_function)(
           local_buffer,
           cnts[opts.rank],
@@ -134,7 +136,9 @@ int main(int argc, char** argv)
           0,
           MPI_COMM_WORLD,
           reqs);
+#ifdef USE_BARRIERS
       assert(MPI_Barrier(MPI_COMM_WORLD)==MPI_SUCCESS);
+#endif
     }
   }
   else
@@ -150,7 +154,9 @@ int main(int argc, char** argv)
             opts.rank, j, local_buffer[j]);
       fprintf(opts.outfile, "\n");
 #endif
+#ifdef USE_BARRIERS
       assert(MPI_Barrier(MPI_COMM_WORLD)==MPI_SUCCESS);
+#endif
       (*gatherv_function)(
           local_buffer,
           cnts[opts.rank],
@@ -161,7 +167,9 @@ int main(int argc, char** argv)
           MPI_DOUBLE,
           0,
           MPI_COMM_WORLD);
+#ifdef USE_BARRIERS
       assert(MPI_Barrier(MPI_COMM_WORLD)==MPI_SUCCESS);
+#endif
     }
   }
   // \critical loop
