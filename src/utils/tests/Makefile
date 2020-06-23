@@ -7,6 +7,7 @@ all: test_parse_args test_tree_math
 	@echo
 	@echo Utils tests passed
 	@echo
+	if [ -f filename ]; then rm filename; fi
 
 test_parse_args: parse_args.c
 	@echo
