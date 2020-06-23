@@ -1,21 +1,12 @@
-#ifndef TREE_REDUCE_H
-#define TREE_REDUCE_H
+#ifndef _TREE_GATHER_H_
+#define _TREE_GATHER_H_
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
-#include <assert.h>
-
-#include "mpi.h"
+#include "common.h"
+#include "utils.h"
 
 #define UNUSED(x) (void)(x)
 #define MAX_MPI_BITS    10
 #define MAX_MPI_RANKS   70
-#define GREEN       "\033[0;32m"
-#define RED         "\033[1;31m"
-#define BLUE        "\033[1;34m"
-#define RESET       "\033[0m"
 
 /*
  * Same function stub as MPI_Gatherv
@@ -54,6 +45,49 @@ extern int my_mpi_gatherv_persistent(
         MPI_Datatype recvtype, int root, MPI_Comm comm,
         MPI_Request* reqs
     );
+
+inline __attribute__((always_inline))
+unsigned int num_bits(int n)
+{
+    int count = 0;
+    while (n)
+    {
+        n >>= 1;
+        count++;
+    }
+    return count;
+}
+
+inline __attribute__((always_inline))
+unsigned int sum(int* ar, int count)
+{
+    int n = 0, i;
+    for (i=0; i<count; i++)
+        n += ar[i];
+    return n;
+}
+
+// rank of rightmost child
+inline int min_child_rank(
+        int* children,
+        int len)
+{
+    int i, min=INT_MAX;
+    for (i=0; i<len; i++)
+        min = children[i] < min ? children[i] : min;
+    return min;
+}
+
+// rank of leftmost child
+inline int max_child_rank(
+        int* children,
+        int len)
+{
+    int i, min=0;
+    for (i=0; i<len; i++)
+        min = children[i] > min ? children[i] : min;
+    return min;
+}
 
 #if 0
 

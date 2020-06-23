@@ -17,24 +17,15 @@ num_loops_sn="5 * (10 ^ 5)"
 num_loops=$( echo "$num_loops_sn" | bc)
 mpi_version="{{ mpi }}"
 
-cmds=(                          				\
-    "module purge"              				\
-    "module load gcc/7.3.0"     				\
-    "module load $mpi_version"  				\
-    "which mpirun"              				\
-    "which mpicc"               				\
-    "make opt"                  				\
-    "chmod +x treegather.bin"                   \
-    "ldd treegather.bin"        				\
-    )
-
-# printing out commands ran to build and run the program
-for cmd in "${cmds[@]}"
-do
-    echo 'bash> ' $cmd
-    echo
-    eval $cmd
-done
+set -x
+module purge
+module load gcc/7.3.0
+module load $mpi_version
+which mpirun
+which mpicc
+make opt
+chmod +x treegather.bin
+ldd treegather.bin
 
 touch 'time/start.{{ hash }}.time'
 mpirun -n $num_procs $(pwd)/treegather.bin \
