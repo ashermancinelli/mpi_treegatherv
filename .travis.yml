@@ -1,12 +1,11 @@
 sudo: false
-compiler: gcc
-
 language: c
+compiler: gcc
 cache:
   directories:
     - mpich
-  before_install:
-    - sh ./.get_mpich.sh
-  script:
-    - make check
+before_install:
+  - sh ./.get_mpich.sh
+script:
+  - make check
 
