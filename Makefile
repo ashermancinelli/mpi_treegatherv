@@ -8,6 +8,7 @@ PREFIX=./install
 endif
 
 export CC				      = mpicc
+export host_CC        = $(shell mpicc -showme | cut -f1 -d' ')
 export BUILDDIR	      = $(shell pwd)/build
 export BINDIR		      = $(BUILDDIR)/bin
 export INCDIR		      = $(BUILDDIR)/include
@@ -29,6 +30,7 @@ all: showme
 	if [ ! -d $(BINDIR) ]; then mkdir -p $(BINDIR); fi
 	if [ ! -d $(INCDIR) ]; then mkdir -p $(INCDIR); fi
 	$(MAKE) -C src
+	$(MAKE) -C tools
 
 showme:
 	@echo
@@ -43,6 +45,8 @@ showme:
 	@echo BIN NAME $(BIN_NAME_SHORT)
 	@echo
 	@echo CC $(CC)
+	@echo
+	@echo host_CC $(host_CC)
 	@echo
 	@echo CFLAGS $(CFLAGS)
 	@echo
@@ -71,8 +75,9 @@ check: install
 	$(BIN_NAME) --data-per-node 1024 --gather-method itree 	\
 			--num-loops 10 --persist		|| exit 1
 	@echo
-	@echo Tests passed
+	@echo MPI_Gatherv tests passed
 	@echo
+	make -C tools check
 
 clean:
 	rm -rf $(BUILDDIR)
