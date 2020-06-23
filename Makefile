@@ -28,7 +28,7 @@ ifeq ($(USE_LOCAL_MPI),1)
 # Use the mpi we build in travis container
 export CC 						= $(abspath ./mpich/bin/mpicc)
 export host_CC 				= gcc
-export CFLAGS					+= -I$(abspath ./mpich/include)
+export CFLAGS					+= -I$(abspath ./mpich/include) -L$(abspath ./mpich/lib)
 else
 export CC				      = mpicc
 export host_CC        = $(shell mpicc -showme | cut -f1 -d' ')
