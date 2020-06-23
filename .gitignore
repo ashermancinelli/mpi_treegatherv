@@ -6,3 +6,5 @@
 sbatch-*.sh
 *.err
 *.out
+*.o
+build/

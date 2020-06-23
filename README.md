@@ -9,6 +9,12 @@ So far just tested on:
 - GCC       >= 7.3.0
 - OpenMPI   >= 3.1.0
 
+## Installation
+
+```console
+$ make install -j 4 PREFIX=/some/dir
+```
+
 ## Testing
 
 Results of testing the synchronous tree-based algorithm,
