@@ -38,10 +38,10 @@ int main(int argc, char** argv)
 {
   MPI_Init(&argc, &argv);
   struct options opts;
-  parse_args(&argc, &argv, &opts);
-  MPI_Barrier(MPI_COMM_WORLD);
   MPI_Comm_size(MPI_COMM_WORLD, &opts.size);
   MPI_Comm_rank(MPI_COMM_WORLD, &opts.rank);
+  parse_args(&argc, &argv, &opts);
+  MPI_Barrier(MPI_COMM_WORLD);
   int i, j;
   bool display_buf = false;
   bool persistent = false;

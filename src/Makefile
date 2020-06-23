@@ -2,12 +2,9 @@
 .PHONY: Makefile clean all run
 
 all:
-	@echo Building in $(BUILDDIR)
-	# Must be first so that common headers will be
-	# available to the rest of the compilation units
-	$(MAKE) -C common
-	$(MAKE) -C utils
-	$(MAKE) -C lib
+	$(MAKE) -C common # Common must be compiled first; has headers needed by all
+	$(MAKE) -C utils # Lib uses some utils functions
+	$(MAKE) -C lib # Lib contains the kernels
 	$(MAKE) -C driver
 
 clean:

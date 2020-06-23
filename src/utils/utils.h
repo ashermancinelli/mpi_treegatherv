@@ -9,6 +9,17 @@
 #define BLUE        "\033[1;34m"
 #define RESET       "\033[0m"
 
+extern const char* usage;
+
+#define EXIT(rank) \
+    if (rank==0) \
+    { \
+      fprintf(stderr, "%s%s%s", RED, usage, RESET); \
+      fflush(stderr); \
+    } \
+    MPI_Finalize(); \
+    exit(0);
+
 enum gather_method
 {
   MPI,
@@ -30,6 +41,7 @@ struct options
   FILE* outfile;
 };
 
+extern void set_default_opts(struct options * opts);
 extern void parse_args(int * argc, char *** argv, struct options * opts);
 extern int cmp(const void * a, const void * b);
 extern void sort(void* base, size_t n, size_t size);

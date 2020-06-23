@@ -152,6 +152,8 @@ int tree_gatherv_d_async(
         for (i=0; i<total; i++)
             fprintf(stdout, "TREE_GATHER.C RANK(%i) global_buffer[%i] = %.1f\n",
                 rank, i, recvbuf[i]);
+#else
+        (void)total;
 #endif
     }
 
