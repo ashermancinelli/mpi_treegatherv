@@ -11,6 +11,9 @@
 
 extern const char* usage;
 
+#ifdef RELEASE
+#define EXIT(rank) MPI_Finalize(); exit(0);
+#else
 #define EXIT(rank) \
     if (rank==0) \
     { \
@@ -19,6 +22,7 @@ extern const char* usage;
     } \
     MPI_Finalize(); \
     exit(0);
+#endif
 
 enum gather_method
 {

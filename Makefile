@@ -19,10 +19,9 @@ export CFLAGS         += -I$(INCDIR)
 
 ifeq ($(BUILD_TYPE),debug)
 export CFLAGS         += -Wextra -Wpedantic -Wmisleading-indentation
-export CFLAGS         += -O0
-export CFLAGS         += -g
+export CFLAGS         += -O0 -g
 else ifeq ($(BUILD_TYPE),release)
-export CFLAGS         += -O3
+export CFLAGS         += -O3 -DRELEASE
 endif
 
 ifeq ($(USE_BARRIERS),1)
@@ -46,27 +45,30 @@ CC										:= $(shell which $(CC))
 HOSTCC								:= $(shell which $(HOSTCC))
 
 all: info
-	if [ ! -d $(BINDIR) ]; then mkdir -p $(BINDIR); fi
-	if [ ! -d $(INCDIR) ]; then mkdir -p $(INCDIR); fi
+	for dir in $(PREFIX) $(BUILDDIR) $(BINDIR) $(INCDIR); do \
+		if [ ! -d $$dir ]; then mkdir -p $$dir; fi \
+	done
 	$(MAKE) -C src
 	$(MAKE) -C tools
 
 info:
-	@printf 'BUILD_TYPE\t\t$(BUILD_TYPE)'
+	@printf 'BUILD_TYPE\t\t= $(BUILD_TYPE)'
 	@echo
-	@printf 'BUILDIDR\t\t$(BUILDDIR)'
+	@printf 'BUILDIDR\t\t= $(BUILDDIR)'
 	@echo
-	@printf 'BINDIR\t\t\t$(BINDIR)'
+	@printf 'INSTALL PREFIX\t\t= $(PREFIX)'
 	@echo
-	@printf 'INCIDR\t\t\t$(INCDIR)'
+	@printf 'BINDIR\t\t\t= $(BINDIR)'
 	@echo
-	@printf 'BINNAME\t\t\t$(BIN_NAME_SHORT)'
+	@printf 'INCIDR\t\t\t= $(INCDIR)'
 	@echo
-	@printf 'CC\t\t\t$(CC)'
+	@printf 'BINNAME\t\t\t= $(BIN_NAME_SHORT)'
 	@echo
-	@printf 'HOSTCC\t\t\t$(HOSTCC)'
+	@printf 'CC\t\t\t= $(CC)'
 	@echo
-	@printf 'CFLAGS\t\t\t$(CFLAGS)'
+	@printf 'HOSTCC\t\t\t= $(HOSTCC)'
+	@echo
+	@printf 'CFLAGS\t\t\t= $(CFLAGS)'
 	@echo
 
 install: all

@@ -1,9 +1,6 @@
-
 #include "common.h"
 #include "tree_gather.h"
 #include "utils.h"
-
-#define DEFAULT_KEEP_RATIO 0.8f
 
 /*
  * Wrapper such that the builtin gatherv matches the other
@@ -65,6 +62,7 @@ int main(int argc, char** argv)
     local_buffer[j] = (double)(opts.rank + 1);
   for (i=0; i<MAX_MPI_RANKS; i++) reqs[i] = MPI_REQUEST_NULL;
 
+#ifndef RELEASE
   if (!opts.rank)
   {
     if (display_buf)
@@ -88,6 +86,8 @@ int main(int argc, char** argv)
     fprintf(opts.outfile, "Using %d procs.\n\n", opts.size);
     fflush(opts.outfile);
   }
+  fflush(opts.outfile);
+#endif
 
   /*
    * Set the function pointers according to the
@@ -106,17 +106,17 @@ int main(int argc, char** argv)
   else if (opts.method == MYMPI && persistent)
     persistent_gatherv_function = &my_mpi_gatherv_persistent;
 
-  fflush(opts.outfile);
-
   // critical loop
   if (persistent)
   {
+#ifndef RELEASE
     if (!opts.rank)
       fprintf(stdout, "Running critical loop with "
           "persistent communication.\n");
+#endif
     for (i=0; i<opts.num_loops; i++)
     {
-#ifdef __DEBUG
+#ifndef RELEASE
       for (j=0; j<cnts[opts.rank]; j++)
         fprintf(opts.outfile, "MAIN.C RANK(%i) local_buffer[%i] = %.1f\n",
             opts.rank, j, local_buffer[j]);
@@ -143,12 +143,14 @@ int main(int argc, char** argv)
   }
   else
   {
+#ifndef RELEASE
     if (!opts.rank)
       fprintf(stdout, "Running critical loop with "
           "non-persistent communication.\n");
+#endif
     for (i=0; i<opts.num_loops; i++)
     {
-#ifdef __DEBUG
+#ifndef RELEASE
       for (j=0; j<cnts[opts.rank]; j++)
         fprintf(opts.outfile, "MAIN.C RANK(%i) local_buffer[%i] = %.1f\n",
             opts.rank, j, local_buffer[j]);
@@ -174,6 +176,7 @@ int main(int argc, char** argv)
   }
   // \critical loop
 
+#ifndef RELEASE
   if (!opts.rank && opts.display_buf)
   {
     fprintf(opts.outfile, "Global buffer: \n");
@@ -182,11 +185,11 @@ int main(int argc, char** argv)
     fprintf(opts.outfile, "\n");
   }
 
-  free(global_buffer);free(local_buffer);
-
   if (opts.outfile != stdout)
     fclose(opts.outfile);
+#endif
 
+  free(global_buffer);free(local_buffer);
   MPI_Finalize();
   return 0;
 }
