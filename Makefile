@@ -28,6 +28,10 @@ ifeq ($(USE_BARRIERS),1)
 export CFLAGS					+= -DUSE_BARRIERS
 endif
 
+ifeq ($(VERBOSE_OUTPUT),1)
+export CFLAGS					+= -DVERBOSE_OUTPUT
+endif
+
 ifeq ($(USE_LOCAL_MPI),1)
 # Use the mpi we build in travis container
 export CC 						= $(abspath ./mpich/bin/mpicc)
@@ -70,11 +74,14 @@ info:
 	@echo
 	@printf 'CFLAGS\t\t\t= $(CFLAGS)'
 	@echo
+	@printf 'VERBOSE_OUTPUT\t\t= $(VERBOSE_OUTPUT)'
+	@echo
 
 install: all
 	if [ ! -d $(PREFIX)/bin ]; then mkdir -p $(PREFIX)/bin; fi
 	if [ ! -d $(PREFIX)/include ]; then mkdir -p $(PREFIX)/include; fi
-	if [ ! -z "$(PREFIX)" ]; then install $(BINDIR)/* $(PREFIX)/bin/; fi
+	install $(BUILDDIR)/bin/treegather.bin $(PREFIX)/bin/
+	install $(BUILDDIR)/bin/bench.bin $(PREFIX)/bin/
 	cp $(INCDIR)/* $(PREFIX)/include
 
 check: install
@@ -97,8 +104,8 @@ check: install
 	@echo
 	@echo MPI_Gatherv tests passed
 	@echo
-	make -C src check
-	make -C tools check
+	$(MAKE) -C src check
+	$(MAKE) -C tools check
 
 clean:
 	rm -rf $(BUILDDIR)

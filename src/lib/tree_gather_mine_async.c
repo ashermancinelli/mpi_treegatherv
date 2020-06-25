@@ -17,7 +17,7 @@ int tree_gatherv_d_async(
   MPI_Comm_rank(comm, &rank);
   MPI_Comm_size(comm, &comm_size);
 
-#ifndef RELEASE
+#if !defined RELEASE && VERBOSE_OUTPUT
   for (i=0; i<recvcnts[rank]; i++)
     fprintf(stdout, "TREE_GATHER.C RANK(%i) local_buffer[%i] = %.1f\n",
         rank, i, sendbuf[i]);
@@ -46,7 +46,7 @@ int tree_gatherv_d_async(
   // is annoying but hopefully it prevents the memory corruption
   MPI_Request rec_hdls[MAX_MPI_BITS];
 
-#ifndef RELEASE
+#if !defined RELEASE && VERBOSE_OUTPUT
   fprintf(stdout, "%s", BLUE);
   if (rank == root)
     fprintf(stdout, "\tBits to hold world size: %i\n"
@@ -71,7 +71,7 @@ int tree_gatherv_d_async(
       if (partner_rank < comm_size)
       {
         int cnt = node_data_count(partner_rank, comm_size, recvcnts, i);
-#ifndef RELEASE
+#if !defined RELEASE && VERBOSE_OUTPUT
         fprintf(stdout, "ISSUED RECIEVE %i <- %i (%i count at displ %i) on iter %i\n",
             rank, partner_rank, cnt, displs[partner_rank], i);
         fflush(stdout);
@@ -95,7 +95,7 @@ int tree_gatherv_d_async(
        */
       if (i > 0)
       {
-#ifndef RELEASE
+#if !defined RELEASE && VERBOSE_OUTPUT
         fprintf(stdout, "rank %d waiting on %d recvs\n",
             rank, i);
         fflush(stdout);
@@ -103,14 +103,14 @@ int tree_gatherv_d_async(
 
         MPI_Waitall(i, rec_hdls, MPI_STATUSES_IGNORE);
 
-#ifndef RELEASE
+#if !defined RELEASE && VERBOSE_OUTPUT
         fprintf(stdout, "rank %d successfully got %d recvs\n", rank, i);
         fflush(stdout);
 #endif
       }
 
       int cnt = node_data_count(rank, comm_size, recvcnts, i);
-#ifndef RELEASE
+#if !defined RELEASE && VERBOSE_OUTPUT
       fprintf(stdout, "SEND %i -> %i (%i data at displ %i) on iter %i\n",
           rank, partner_rank, cnt, displs[rank], i);
       fflush(stdout);
@@ -133,7 +133,7 @@ int tree_gatherv_d_async(
    * will be the last one alive.
    */
 
-#ifndef RELEASE
+#if !defined RELEASE && VERBOSE_OUTPUT
   if (rank == root)
   {
     fprintf(stdout, "Root node waiting on %d"
@@ -148,7 +148,7 @@ int tree_gatherv_d_async(
     // root will have to wait on that many recvs
     MPI_Waitall(bits, rec_hdls, MPI_STATUSES_IGNORE);
     int total = sum(recvcnts, comm_size);
-#ifndef RELEASE
+#if !defined RELEASE && VERBOSE_OUTPUT
     for (i=0; i<total; i++)
       fprintf(stdout, "TREE_GATHER.C RANK(%i) global_buffer[%i] = %.1f\n",
           rank, i, recvbuf[i]);
@@ -167,7 +167,7 @@ int tree_gatherv_d_async(
     {
       MPI_Recv(recvbuf, sum(recvcnts, comm_size-1),
           MPI_DOUBLE, 0, 0, comm, MPI_STATUS_IGNORE);
-#ifndef RELEASE
+#if !defined RELEASE && VERBOSE_OUTPUT
       fprintf(stdout, "Root node exiting gracefully.\n");
       fflush(stdout);
 #endif
@@ -177,7 +177,7 @@ int tree_gatherv_d_async(
           MPI_DOUBLE, root, 0, comm);
   }
 
-#ifndef RELEASE
+#if !defined RELEASE && VERBOSE_OUTPUT
   fprintf(stdout, "%s", RESET);
   fprintf(stdout, "EXIT: rank %d exiting gracefully.\n", rank);
   fflush(stdout);

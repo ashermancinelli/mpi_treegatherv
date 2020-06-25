@@ -1,5 +1,25 @@
 #include "utils.h"
 
+void options_print(struct options* opts)
+{
+  if (opts->rank == 0)
+  {
+    printf("Options:\n\tpersist: %s\n\tdisplay_buf: %s\n\t"
+        "num_loops: %d\n\t"
+        "data_per_node: %d\n\t"
+        "data_per_proc: %d\n\t"
+        "size: %d\n\t"
+        "gather_method: %s\n",
+        opts->persistent?"true":"false",
+        opts->display_buf?"true":"false",
+        opts->num_loops,
+        opts->data_per_node,
+        opts->data_per_proc,
+        opts->size,
+        method_to_str(opts->method));
+  }
+}
+
 void parse_args(int * _argc, char *** _argv, struct options * opts)
 {
   set_default_opts(opts);
@@ -80,4 +100,7 @@ void parse_args(int * _argc, char *** _argv, struct options * opts)
       }
     }
   }
+
+  if(opts->method == MPI && opts->persistent)
+    assert(false && "Invalid configuration. No persistent version of MPI available.");
 }

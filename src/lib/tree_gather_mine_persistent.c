@@ -26,7 +26,7 @@ int tree_gatherv_d_persistent(
 
   bits = num_bits(comm_size);
 
-#ifndef RELEASE
+#if !defined RELEASE && VERBOSE_OUTPUT
   fprintf(stdout, "%s", BLUE);
   if (rank == root)
   {
@@ -59,7 +59,7 @@ int tree_gatherv_d_persistent(
       if (partner_rank < comm_size)
       {
         int cnt = node_data_count(partner_rank, comm_size, recvcnts, i);
-#ifndef RELEASE
+#if !defined RELEASE && VERBOSE_OUTPUT
         fprintf(stdout, "ISSUED RECIEVE %i <- %i (%i count at displ %i) on iter %i\n",
             rank, partner_rank, cnt, displs[partner_rank], i);
         fflush(stdout);
@@ -78,7 +78,7 @@ int tree_gatherv_d_persistent(
     {
       if (i > 0)
       {
-#ifndef RELEASE
+#if !defined RELEASE && VERBOSE_OUTPUT
         fprintf(stdout, "rank %d waiting on %d recvs\n",
             rank, i);
         fflush(stdout);
@@ -86,14 +86,14 @@ int tree_gatherv_d_persistent(
 
         MPI_Waitall(i, reqs, MPI_STATUSES_IGNORE);
 
-#ifndef RELEASE
+#if !defined RELEASE && VERBOSE_OUTPUT
         fprintf(stdout, "rank %d successfully got %d recvs\n", rank, i);
         fflush(stdout);
 #endif
       }
 
       int cnt = node_data_count(rank, comm_size, recvcnts, i);
-#ifndef RELEASE
+#if !defined RELEASE && VERBOSE_OUTPUT
       fprintf(stdout, "SEND %i -> %i (%i data at displ %i) on iter %i\n",
           rank, partner_rank, cnt, displs[rank], i);
       fflush(stdout);
@@ -125,7 +125,7 @@ cleanup:
           MPI_DOUBLE, root, 0, comm);
   }
 
-#ifndef RELEASE
+#if !defined RELEASE && VERBOSE_OUTPUT
   fprintf(stdout, "%s", RESET);
   fprintf(stdout, "EXIT: rank %d exiting gracefully.\n", rank);
   fflush(stdout);

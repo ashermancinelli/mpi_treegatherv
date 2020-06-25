@@ -46,6 +46,7 @@ struct options
 };
 
 extern void parse_args(int * argc, char *** argv, struct options * opts);
+extern void options_print(struct options* opts);
 extern void set_default_opts(struct options * opts);
 extern int cmp(const void * a, const void * b);
 extern void sort(void* base, size_t n, size_t size);

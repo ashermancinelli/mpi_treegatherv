@@ -27,7 +27,7 @@ int tree_gatherv_d(
   else
     memcpy(recvbuf + displs[rank], sendbuf, sizeof(double)*sendcnt);
 
-#ifndef RELEASE
+#if !defined RELEASE && defined VERBOSE_OUTPUT
   if (rank == root)
     fprintf(stdout, "%s\tBits to hold world size: %i\n"
         "\tComm size capacity: %i\n"
@@ -62,7 +62,7 @@ int tree_gatherv_d(
       if (partner_rank < comm_size)
       {
         int cnt = node_data_count(partner_rank, comm_size, recvcnts, i);
-#ifndef RELEASE
+#if !defined RELEASE && defined VERBOSE_OUTPUT
         fprintf(stdout, "RECIEVE %i <- %i (%i count at displ %i) on iter %i\n",
             rank, partner_rank, cnt, displs[partner_rank], i);
         fflush(stdout);
@@ -80,7 +80,7 @@ int tree_gatherv_d(
     else
     {
       int cnt = node_data_count(rank, comm_size, recvcnts, i);
-#ifndef RELEASE
+#if !defined RELEASE && defined VERBOSE_OUTPUT
       fprintf(stdout, "SEND %i -> %i (%i count at displ %i) on iter %i\n",
           rank, partner_rank, cnt, displs[rank], i);
       fflush(stdout);
@@ -91,7 +91,7 @@ int tree_gatherv_d(
     }
   }
 
-#ifndef RELEASE
+#if !defined RELEASE && defined VERBOSE_OUTPUT
   if (rank == 0) fprintf(stdout, "%s", RESET);
 #endif
   /*

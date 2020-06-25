@@ -24,12 +24,12 @@ int _MPI_Gatherv(
 int (*gatherv_function)(
     double *sendbuf, int sendcnt,   MPI_Datatype sendtype,
     double *recvbuf, int *recvcnts, int *displs,
-    MPI_Datatype recvtype, int root, MPI_Comm comm);
+    MPI_Datatype recvtype, int root, MPI_Comm comm) = NULL;
 int (*persistent_gatherv_function)(
     double *sendbuf, int sendcnt, MPI_Datatype sendtype,
     double *recvbuf, int *recvcnts, int *displs,
     MPI_Datatype recvtype, int root, MPI_Comm comm,
-    MPI_Request* reqs);
+    MPI_Request* reqs) = NULL;
 
 int main(int argc, char** argv)
 {
@@ -40,18 +40,16 @@ int main(int argc, char** argv)
   parse_args(&argc, &argv, &opts);
   MPI_Barrier(MPI_COMM_WORLD);
   int i, j;
-  bool display_buf = false;
-  bool persistent = false;
-  double *global_buffer;
-  double *local_buffer;
   MPI_Request reqs[MAX_MPI_RANKS];
 
   int *offsets = malloc(sizeof(int) * opts.size);
   int *cnts = malloc(sizeof(int) * opts.size);
-  opts.outfile = stdout;
 
-  global_buffer = malloc(sizeof(double) * opts.size * opts.data_per_node);
-  local_buffer = malloc(sizeof(double) * opts.data_per_node);
+  double* global_buffer = malloc(sizeof(double) * opts.size * opts.data_per_node);
+  double* local_buffer = malloc(sizeof(double) * opts.data_per_node);
+#if !defined RELEASE
+  options_print(&opts);
+#endif
 
   offsets[0] = 0;
   for (i=0; i<opts.size; i++)
@@ -62,10 +60,10 @@ int main(int argc, char** argv)
     local_buffer[j] = (double)(opts.rank + 1);
   for (i=0; i<MAX_MPI_RANKS; i++) reqs[i] = MPI_REQUEST_NULL;
 
-#ifndef RELEASE
+#if !defined RELEASE && defined VERBOSE_OUTPUT
   if (!opts.rank)
   {
-    if (display_buf)
+    if (opts.display_buf)
     {
       fprintf(opts.outfile, "Config:\n");
       for (i=0; i<opts.size; i++)
@@ -97,26 +95,26 @@ int main(int argc, char** argv)
     gatherv_function = &_MPI_Gatherv;
   else if (opts.method == TREE)
     gatherv_function = &tree_gatherv_d;
-  else if (opts.method == ITREE && !persistent)
+  else if (opts.method == ITREE && !opts.persistent)
     gatherv_function = &tree_gatherv_d_async;
-  else if (opts.method == ITREE && persistent)
+  else if (opts.method == ITREE && opts.persistent)
     persistent_gatherv_function = &tree_gatherv_d_persistent;
-  else if (opts.method == MYMPI && !persistent)
+  else if (opts.method == MYMPI && !opts.persistent)
     gatherv_function = &my_mpi_gatherv;
-  else if (opts.method == MYMPI && persistent)
+  else if (opts.method == MYMPI && opts.persistent)
     persistent_gatherv_function = &my_mpi_gatherv_persistent;
 
   // critical loop
-  if (persistent)
+  if (opts.persistent)
   {
-#ifndef RELEASE
+#if !defined RELEASE && defined VERBOSE_OUTPUT
     if (!opts.rank)
       fprintf(stdout, "Running critical loop with "
           "persistent communication.\n");
 #endif
     for (i=0; i<opts.num_loops; i++)
     {
-#ifndef RELEASE
+#if !defined RELEASE && defined VERBOSE_OUTPUT
       for (j=0; j<cnts[opts.rank]; j++)
         fprintf(opts.outfile, "MAIN.C RANK(%i) local_buffer[%i] = %.1f\n",
             opts.rank, j, local_buffer[j]);
@@ -124,6 +122,9 @@ int main(int argc, char** argv)
 #endif
 #ifdef USE_BARRIERS
       assert(MPI_Barrier(MPI_COMM_WORLD)==MPI_SUCCESS);
+#endif
+#if !defined RELEASE
+      assert(persistent_gatherv_function != NULL && "Got null function pointer. Check configuration.");
 #endif
       (*persistent_gatherv_function)(
           local_buffer,
@@ -143,14 +144,14 @@ int main(int argc, char** argv)
   }
   else
   {
-#ifndef RELEASE
+#if !defined RELEASE && defined VERBOSE_OUTPUT
     if (!opts.rank)
       fprintf(stdout, "Running critical loop with "
           "non-persistent communication.\n");
 #endif
     for (i=0; i<opts.num_loops; i++)
     {
-#ifndef RELEASE
+#if !defined RELEASE && defined VERBOSE_OUTPUT
       for (j=0; j<cnts[opts.rank]; j++)
         fprintf(opts.outfile, "MAIN.C RANK(%i) local_buffer[%i] = %.1f\n",
             opts.rank, j, local_buffer[j]);
@@ -158,6 +159,9 @@ int main(int argc, char** argv)
 #endif
 #ifdef USE_BARRIERS
       assert(MPI_Barrier(MPI_COMM_WORLD)==MPI_SUCCESS);
+#endif
+#if !defined RELEASE
+      assert(gatherv_function != NULL && "Got null function pointer. Check configuration.");
 #endif
       (*gatherv_function)(
           local_buffer,
@@ -174,9 +178,8 @@ int main(int argc, char** argv)
 #endif
     }
   }
-  // \critical loop
 
-#ifndef RELEASE
+#if !defined RELEASE && defined VERBOSE_OUTPUT
   if (!opts.rank && opts.display_buf)
   {
     fprintf(opts.outfile, "Global buffer: \n");
