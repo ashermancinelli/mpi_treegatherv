@@ -93,11 +93,7 @@ check: install
 			--num-loops 10 		|| exit 1
 	$(MPIRUN) $(MPIRUN_ARGS) $(BIN_NAME) --data-per-node 1024 --gather-method itree 	\
 			--num-loops 10 		|| exit 1
-	$(MPIRUN) $(MPIRUN_ARGS) $(BIN_NAME) --data-per-node 1024 --gather-method mpi 		\
-			--num-loops 10 --persist		|| exit 1
 	$(MPIRUN) $(MPIRUN_ARGS) $(BIN_NAME) --data-per-node 1024 --gather-method my-mpi \
-			--num-loops 10 --persist		|| exit 1
-	$(MPIRUN) $(MPIRUN_ARGS) $(BIN_NAME) --data-per-node 1024 --gather-method tree 	\
 			--num-loops 10 --persist		|| exit 1
 	$(MPIRUN) $(MPIRUN_ARGS) $(BIN_NAME) --data-per-node 1024 --gather-method itree 	\
 			--num-loops 10 --persist		|| exit 1

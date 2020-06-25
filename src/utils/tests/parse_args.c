@@ -26,9 +26,13 @@ int main(int _argc, char** _argv)
   printf("%s", GREEN);
   puts("-- passed default case");
 
-  argc=2;
+  // Must use another gather method since there is no
+  // persistent version of the default MPI algorithm
+  argc=4;
   strcpy(argv[0], "bin_name");
-  strcpy(argv[1], "--persist\0");
+  strcpy(argv[1], "--persist");
+  strcpy(argv[2], "--gather-method");
+  strcpy(argv[3], "itree");
   parse_args(&argc, &argv, &opts);
   assert(opts.persistent == true);
   puts("-- passed persist flag");

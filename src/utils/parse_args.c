@@ -101,6 +101,8 @@ void parse_args(int * _argc, char *** _argv, struct options * opts)
     }
   }
 
-  if(opts->method == MPI && opts->persistent)
-    assert(false && "Invalid configuration. No persistent version of MPI available.");
+  assert(!(opts->method == MPI && opts->persistent)
+      && "Invalid configuration. No persistent version of MPI algorithm available.");
+  assert(!(opts->method == TREE && opts->persistent)
+      && "Invalid configuration. No persistent version of TREE algorithm available.");
 }
