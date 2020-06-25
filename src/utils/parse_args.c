@@ -1,5 +1,13 @@
 #include "utils.h"
 
+const char* usage  = "Usage:\n"
+  "\t--gather-method      (mpi|my-mpi|tree|itree)\n"
+  "\t--output-file        <filename or blank for stdout>\n"
+  "\t--display-buf        Display buffers before/after run\n"
+  "\t--data-per-node      <int>\n"
+  "\t--num-loops          <int>\n"
+  "\t--persistent         Use persistent communication";
+
 void options_print(struct options* opts)
 {
   if (opts->rank == 0)

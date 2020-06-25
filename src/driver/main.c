@@ -94,15 +94,15 @@ int main(int argc, char** argv)
   if (opts.method == MPI)
     gatherv_function = &_MPI_Gatherv;
   else if (opts.method == TREE)
-    gatherv_function = &tree_gatherv_d;
+    gatherv_function = &tree_gatherv;
   else if (opts.method == ITREE && !opts.persistent)
-    gatherv_function = &tree_gatherv_d_async;
+    gatherv_function = &tree_async_gatherv;
   else if (opts.method == ITREE && opts.persistent)
-    persistent_gatherv_function = &tree_gatherv_d_persistent;
+    persistent_gatherv_function = &tree_async_persistent_gatherv;
   else if (opts.method == MYMPI && !opts.persistent)
-    gatherv_function = &my_mpi_gatherv;
+    gatherv_function = &mpi_gatherv;
   else if (opts.method == MYMPI && opts.persistent)
-    persistent_gatherv_function = &my_mpi_gatherv_persistent;
+    persistent_gatherv_function = &mpi_async_persistent_gatherv;
 
   // critical loop
   if (opts.persistent)

@@ -4,7 +4,7 @@
  * parameter reqs must have allocated enough space
  * to hold teh correct number of requests
  */
-int tree_gatherv_d_persistent(
+int tree_async_persistent_gatherv(
     double *sendbuf, int sendcnt, MPI_Datatype sendtype,
     double *recvbuf, int *recvcnts, int *displs,
     MPI_Datatype recvtype, int root, MPI_Comm comm,

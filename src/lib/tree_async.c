@@ -4,7 +4,7 @@
  * Using async recieves. If a sender has pending
  * recvs, wait on all recieves before sending and dying
  */
-int tree_gatherv_d_async(
+int tree_async_gatherv(
     double *sendbuf, int sendcnt, MPI_Datatype sendtype,
     double *recvbuf, int *recvcnts, int *displs,
     MPI_Datatype recvtype, int root, MPI_Comm comm)

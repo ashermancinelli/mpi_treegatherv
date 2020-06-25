@@ -4,42 +4,50 @@
 #include "common.h"
 #include "utils.h"
 
-#define UNUSED(x) (void)(x)
-#define MAX_MPI_BITS    10
-#define MAX_MPI_RANKS   70
+/*
+ * Tree-based algorithm described below
+ */
+extern int tree_gatherv(
+        double *sendbuf, int sendcnt, MPI_Datatype sendtype,
+        double *recvbuf, int *recvcnts, int *displs,
+        MPI_Datatype recvtype, int root, MPI_Comm comm
+    );
 
 /*
- * Same function stub as MPI_Gatherv
- * Should function the exact same, but
- * with a performance boost from the tree
- * structure
+ * Tree-based algorithm described below,
+ * but with asyncronous communication
  */
-extern int tree_gatherv_d(
+extern int tree_async_gatherv(
         double *sendbuf, int sendcnt, MPI_Datatype sendtype,
         double *recvbuf, int *recvcnts, int *displs,
         MPI_Datatype recvtype, int root, MPI_Comm comm
     );
 
-extern int tree_gatherv_d_async(
-        double *sendbuf, int sendcnt, MPI_Datatype sendtype,
-        double *recvbuf, int *recvcnts, int *displs,
-        MPI_Datatype recvtype, int root, MPI_Comm comm
-    );
-
-extern int tree_gatherv_d_persistent(
+/*
+ * Tree-based algorithm described below,
+ * but with asyncronous communication and persistent
+ * request structs
+ */
+extern int tree_async_persistent_gatherv(
         double *sendbuf, int sendcnt, MPI_Datatype sendtype,
         double *recvbuf, int *recvcnts, int *displs,
         MPI_Datatype recvtype, int root, MPI_Comm comm,
         MPI_Request* reqs
     );
 
-extern int my_mpi_gatherv(
+/*
+ * Same algorithm used in openmpi
+ */
+extern int mpi_gatherv(
         double *sendbuf, int sendcnt,   MPI_Datatype sendtype,
         double *recvbuf, int *recvcnts, int *displs,
         MPI_Datatype recvtype, int root, MPI_Comm comm
     );
 
-extern int my_mpi_gatherv_persistent(
+/*
+ * Same algorithm used in openmpi, but with persistent communication
+ */
+extern int mpi_async_persistent_gatherv(
         double *sendbuf, int sendcnt,   MPI_Datatype sendtype,
         double *recvbuf, int *recvcnts, int *displs,
         MPI_Datatype recvtype, int root, MPI_Comm comm,

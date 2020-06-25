@@ -1,6 +1,6 @@
 #include "tree_gather.h"
 
-int my_mpi_gatherv(
+int mpi_gatherv(
     double *sendbuf, int sendcnt,   MPI_Datatype sendtype,
     double *recvbuf, int *recvcnts, int *displs,
     MPI_Datatype recvtype, int root, MPI_Comm comm)

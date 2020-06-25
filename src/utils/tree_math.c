@@ -1,14 +1,6 @@
 
 #include "utils.h"
 
-const char* usage  = "Usage:\n"
-  "\t--gather-method      (mpi|my-mpi|tree|itree)\n"
-  "\t--output-file        <filename or blank for stdout>\n"
-  "\t--display-buf        Display buffers before/after run\n"
-  "\t--data-per-node      <int>\n"
-  "\t--num-loops          <int>\n"
-  "\t--persistent         Use persistent communication";
-
 int cmp(const void * a, const void * b)
 {
   if (*(double*)a > *(double*)b) return 1;

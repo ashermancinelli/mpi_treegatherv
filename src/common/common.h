@@ -19,4 +19,8 @@
 #define DEFAULT_METHOD MPI
 #define DEFAULT_OUTFILE stdout
 
+#define UNUSED(x) (void)(x)
+#define MAX_MPI_BITS    10
+#define MAX_MPI_RANKS   70
+
 #endif

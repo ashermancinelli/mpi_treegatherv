@@ -1,10 +1,10 @@
 
 ifeq ($(BUILD_TYPE),)
-BUILD_TYPE 						= debug
+export BUILD_TYPE 		= debug
 endif
 
 ifeq ($(PREFIX),)
-PREFIX								= $(shell pwd)/install
+export PREFIX					= $(shell pwd)/install
 endif
 
 export BUILDDIR	      = $(shell pwd)/build
@@ -40,12 +40,12 @@ export MPIRUN					= $(abspath ./mpich/bin/mpirun)
 else
 export CC				      = mpicc
 export HOSTCC         = $(shell mpicc -showme | cut -f1 -d' ')
-MPIRUN								= mpirun
+export MPIRUN					= mpirun
 endif
 
 # Use absolute paths
-CC										:= $(shell which $(CC))
-HOSTCC								:= $(shell which $(HOSTCC))
+export CC							:= $(shell which $(CC))
+export HOSTCC					:= $(shell which $(HOSTCC))
 
 all: info
 	for dir in $(BUILDDIR) $(BINDIR) $(INCDIR); do \
@@ -86,6 +86,9 @@ install: all
 	cp $(INCDIR)/* $(PREFIX)/include
 
 check: all
+	@echo
+	@echo Gather Algorithms Integration Tests:
+	@echo
 	$(MPIRUN) $(MPIRUN_ARGS) $(BIN_NAME) --data-per-node 1024 --gather-method mpi 		\
 			--num-loops 10 		|| exit 1
 	$(MPIRUN) $(MPIRUN_ARGS) $(BIN_NAME) --data-per-node 1024 --gather-method my-mpi \
@@ -99,7 +102,7 @@ check: all
 	$(MPIRUN) $(MPIRUN_ARGS) $(BIN_NAME) --data-per-node 1024 --gather-method itree 	\
 			--num-loops 10 --persist		|| exit 1
 	@echo
-	@echo MPI_Gatherv tests passed
+	@echo Gather Algorithms Integration Tests passed
 	@echo
 	$(MAKE) -C src check
 	$(MAKE) -C tools check
