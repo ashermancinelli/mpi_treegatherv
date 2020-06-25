@@ -5,8 +5,8 @@
 #include "stdbool.h"
 #include "string.h"
 #include "stdlib.h"
-#define MS 1
-#define SECS MS * 1000
+#define NS 1
+#define SECS NS * 1000000000
 #define MINS SECS * 60
 #define HRS MINS * 60
 
@@ -31,22 +31,29 @@
  *
  */
 
+/*
+ * Hours, minutes, seconds, nanoseconds
+ *
+ * All information available to the operating system via ls with
+ * --time-style=full-iso or --full-time
+ *
+ */
 typedef union
 {
   int vals[4];
   struct
   {
-    int h, m, s, ms;
+    int h, m, s, n;
   };
 } time_fmt;
 
 int abs_time(time_fmt* t)
 {
   return (
-      (t->h  * HRS) +
-      (t->m  * MINS) +
-      (t->s  * SECS) +
-      (t->ms * MS));
+      (t->h * HRS) +
+      (t->m * MINS) +
+      (t->s * SECS) +
+      (t->n * NS));
 }
 
 int wall_time(unsigned int n, time_fmt* t)
@@ -55,7 +62,7 @@ int wall_time(unsigned int n, time_fmt* t)
   t->h = n / HRS;
   t->m = n / MINS;
   t->s = n / SECS;
-  t->ms = n / MS;
+  t->n = n / NS;
   return 0;
 }
 
@@ -66,13 +73,13 @@ int main(int argc, char** argv)
   time_fmt t1, t2;
   fgets(buf, sizeof(buf), stdin);
   sscanf(buf, "%d:%d:%d.%d %d:%d:%d.%d",
-      &t1.h, &t1.m, &t1.s, &t1.ms,
-      &t2.h, &t2.m, &t2.s, &t2.ms);
+      &t1.h, &t1.m, &t1.s, &t1.n,
+      &t2.h, &t2.m, &t2.s, &t2.n);
 
   long int abs1 = abs_time(&t1);
   long int abs2 = abs_time(&t2);
   unsigned int diff = abs(abs1-abs2);
   assert(wall_time(diff,&t1)==0);
   printf("%d\n",diff);
-  // printf("%d:%d:%d.%d\n", t1.h, t1.m, t1.s, t1.ms);
+  // printf("%d:%d:%d.%d\n", t1.h, t1.m, t1.s, t1.n);
 }

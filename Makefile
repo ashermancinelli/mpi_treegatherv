@@ -1,10 +1,10 @@
 
 ifeq ($(BUILD_TYPE),)
-BUILD_TYPE = debug
+BUILD_TYPE 						= debug
 endif
 
 ifeq ($(PREFIX),)
-PREFIX=./install
+PREFIX								= $(shell pwd)/install
 endif
 
 export BUILDDIR	      = $(shell pwd)/build
@@ -14,11 +14,10 @@ export BIN_NAME_SHORT = treegather.bin
 export BIN_NAME	 			= $(BINDIR)/$(BIN_NAME_SHORT)
 export MPIRUN_ARGS		= -np 2
 
-export CFLAGS		      =  -Wall
-export CFLAGS         += -I$(INCDIR)
+export CFLAGS         = -I$(INCDIR)
 
 ifeq ($(BUILD_TYPE),debug)
-export CFLAGS         += -Wextra -Wpedantic -Wmisleading-indentation
+export CFLAGS         += -Wall -Wextra -Wpedantic -Wmisleading-indentation
 export CFLAGS         += -O0 -g
 else ifeq ($(BUILD_TYPE),release)
 export CFLAGS         += -O3 -DRELEASE
@@ -49,7 +48,7 @@ CC										:= $(shell which $(CC))
 HOSTCC								:= $(shell which $(HOSTCC))
 
 all: info
-	for dir in $(PREFIX) $(BUILDDIR) $(BINDIR) $(INCDIR); do \
+	for dir in $(BUILDDIR) $(BINDIR) $(INCDIR); do \
 		if [ ! -d $$dir ]; then mkdir -p $$dir; fi \
 	done
 	$(MAKE) -C src
@@ -60,9 +59,11 @@ info:
 	@echo
 	@printf 'BUILDIDR\t\t= $(BUILDDIR)'
 	@echo
-	@printf 'INSTALL PREFIX\t\t= $(PREFIX)'
+	@printf 'PREFIX\t\t\t= $(PREFIX)'
 	@echo
 	@printf 'BINDIR\t\t\t= $(BINDIR)'
+	@echo
+	@printf 'BIN\t\t\t= $(BIN_NAME)'
 	@echo
 	@printf 'INCIDR\t\t\t= $(INCDIR)'
 	@echo
@@ -84,7 +85,7 @@ install: all
 	install $(BUILDDIR)/bin/bench.bin $(PREFIX)/bin/
 	cp $(INCDIR)/* $(PREFIX)/include
 
-check: install
+check: all
 	$(MPIRUN) $(MPIRUN_ARGS) $(BIN_NAME) --data-per-node 1024 --gather-method mpi 		\
 			--num-loops 10 		|| exit 1
 	$(MPIRUN) $(MPIRUN_ARGS) $(BIN_NAME) --data-per-node 1024 --gather-method my-mpi \

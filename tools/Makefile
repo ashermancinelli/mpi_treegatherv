@@ -4,7 +4,7 @@ HOSTCC = cc
 endif
 
 ifeq ($(BINDIR),)
-BINDIR=.
+BINDIR=$(shell pwd)
 endif
 
 all:
@@ -12,8 +12,8 @@ all:
 	$(HOSTCC) $(CFLAGS) bench.c -o $(BINDIR)/bench.bin
 
 check:
-	if [ ! $(shell echo '19:37:58.792808359 19:37:55.812240374' | $(BINDIR)/bench.bin) -eq 19429015 ]; then exit 1; fi
-	if [ ! $(shell printf '19:37:58.792808359 19:37:55.812240374' | $(BINDIR)/bench.bin) -eq 19429015 ]; then exit 1; fi
+	if [ ! $(shell echo '10:37:20.170391791 10:37:19.687822065' | $(BINDIR)/bench.bin) -eq 482569726 ]; then exit 1; fi
+	if [ ! $(shell printf '10:37:20.170391791 10:37:19.687822065' | $(BINDIR)/bench.bin) -eq 482569726  ]; then exit 1; fi
 	@echo
 	@echo Benchmarking utility tests passed
 	@echo
