@@ -39,14 +39,14 @@ install: all
 	install $(BUILDDIR)/bin/treegather.bin $(PREFIX)/bin/
 	install $(BUILDDIR)/bin/bench.bin $(PREFIX)/bin/
 	@if [ ! -z "$(MAKE_SHARED)" ]; then \
-		$(CC) $(SHAREDFLAGS) $(BUILDDIR)/tree_async_persistent.o; \
+		$(CC) $(SHAREDFLAGS) $(BUILDDIR)/tree_async_persistent.o $(BUILDDIR)/tree_math.o; \
 	fi
 	echo "#ifndef _MPI_TREEGATHERV_H_" > $(PUBLIC_HEADER)
 	echo "#define _MPI_TREEGATHERV_H_" >> $(PUBLIC_HEADER)
 	awk '/tree_async_persistent_gatherv/{while(index($$0, ")")==0){print; getline;}print}' \
 		$(INCDIR)/tree_gather.h >> $(PUBLIC_HEADER)
 	echo "#endif" >> $(PUBLIC_HEADER)
-	ar cr "$(BUILDDIR)/lib/$(BIN_NAME_SHORT).a" $(BUILDDIR)/tree_async_persistent.o
+	ar cr "$(BUILDDIR)/lib/$(BIN_NAME_SHORT).a" $(BUILDDIR)/tree_async_persistent.o $(BUILDDIR)/tree_math.o
 	cp $(PUBLIC_HEADER) $(PREFIX)/include
 	cp $(BUILDDIR)/lib/* $(PREFIX)/lib/
 	
