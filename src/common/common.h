@@ -11,6 +11,11 @@
 
 #include "mpi.h"
 
+#define GREEN       "\033[0;32m"
+#define RED         "\033[1;31m"
+#define BLUE        "\033[1;34m"
+#define RESET       "\033[0m"
+
 #define DEFAULT_PERSISTENT false
 #define DEFAULT_DISPLAY_BUF false
 #define DEFAULT_NUM_LOOPS 5
@@ -22,5 +27,8 @@
 #define UNUSED(x) (void)(x)
 #define MAX_MPI_BITS    10
 #define MAX_MPI_RANKS   70
+
+#define TESTCASE(code, name)\
+  printf("%s-- TEST %-25s in %-20s: %15s%s\n", code?GREEN:RED, name, __FILE__, code?"PASS":"FAIL", RESET);
 
 #endif

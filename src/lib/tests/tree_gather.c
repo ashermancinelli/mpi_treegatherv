@@ -50,7 +50,7 @@ int main(int argc, char** argv)
       0, comm);
   assert(ierr == 0);
   err_chck(global_buffer, cnts, offsets, 0, comm);
-  printf("%s-- tree algorithm test pass\n%s", GREEN, RESET);
+  if(rank==0) TESTCASE(true, "tree");
 
   ierr = tree_async_gatherv(
       local_buffer, cnts[rank], MPI_DOUBLE,
@@ -58,7 +58,7 @@ int main(int argc, char** argv)
       0, comm);
   assert(ierr == 0);
   err_chck(global_buffer, cnts, offsets, 0, comm);
-  printf("%s-- tree async algorithm test pass\n%s", GREEN, RESET);
+  if(rank==0) TESTCASE(true, "tree async");
 
   ierr = tree_async_persistent_gatherv(
       local_buffer, cnts[rank], MPI_DOUBLE,
@@ -66,7 +66,7 @@ int main(int argc, char** argv)
       0, comm, reqs);
   assert(ierr == 0);
   err_chck(global_buffer, cnts, offsets, 0, comm);
-  printf("%s-- tree async persistent algorithm test pass\n%s", GREEN, RESET);
+  if(rank==0) TESTCASE(true, "tree async persistent");
 
   ierr = mpi_gatherv(
       local_buffer, cnts[rank], MPI_DOUBLE, 
@@ -74,7 +74,7 @@ int main(int argc, char** argv)
       0, comm);
   assert(ierr == 0);
   err_chck(global_buffer, cnts, offsets, 0, comm);
-  printf("%s-- mpi algorithm test pass\n%s", GREEN, RESET);
+  if(rank==0) TESTCASE(true, "mpi");
 
   ierr = mpi_async_persistent_gatherv(
       local_buffer, cnts[rank], MPI_DOUBLE, 
@@ -82,7 +82,7 @@ int main(int argc, char** argv)
       0, comm, reqs);
   assert(ierr == 0);
   err_chck(global_buffer, cnts, offsets, 0, comm);
-  printf("%s-- mpi async persistent algorithm test pass\n%s", GREEN, RESET);
+  if(rank==0) TESTCASE(true, "mpi async persistent");
 
   free(local_buffer); free(global_buffer);
   MPI_Finalize();
