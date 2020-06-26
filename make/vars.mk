@@ -14,6 +14,11 @@ ifeq ($(VERBOSE_OUTPUT),1)
 export CFLAGS					+= -DVERBOSE_OUTPUT
 endif
 
+ifeq ($(MAKE_SHARED),1)
+export CFLAGS					+= -fPIC
+export SHAREDFLAGS		:= -shared -o "$(BUILDDIR)/lib/$(BIN_NAME_SHORT).so"
+endif
+
 ifeq ($(USE_LOCAL_MPI),1)
 # Use the mpi we build in travis container
 export CC 						= $(abspath ./mpich/bin/mpicc)

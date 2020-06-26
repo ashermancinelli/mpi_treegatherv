@@ -10,8 +10,10 @@ endif
 export BUILDDIR	      = $(shell pwd)/build
 export BINDIR		      = $(BUILDDIR)/bin
 export INCDIR		      = $(BUILDDIR)/include
-export BIN_NAME_SHORT = treegather.bin
-export BIN_NAME	 			= $(BINDIR)/$(BIN_NAME_SHORT)
+export LIBDIR		      = $(BUILDDIR)/lib
+export BIN_NAME_SHORT = treegather
+export BIN_NAME	 			= $(BINDIR)/$(BIN_NAME_SHORT).bin
 export MPIRUN_ARGS		= -np 2
 
 export CFLAGS         = -I$(INCDIR)
+export PUBLIC_HEADER 	= $(INCDIR)/treegatherv.h
