@@ -1,4 +1,4 @@
-#include "tree_gather.h"
+#include "treegatherv.h"
 
 int tree_gatherv(
     double * sendbuf, int sendcnt,   MPI_Datatype sendtype,

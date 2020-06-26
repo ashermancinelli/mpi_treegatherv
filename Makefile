@@ -1,11 +1,13 @@
 
+.DEFAULT_GOAL := all
+
 include make/defaults.mk
 include make/vars.mk
 
 all: info
-	@for dir in $(BUILDDIR) $(BINDIR) $(INCDIR) $(LIBDIR); do if [ ! -d $$dir ]; then mkdir -p $$dir; fi done
-	@$(MAKE) -C src
-	@$(MAKE) -C tools
+	for dir in $(BUILDDIR) $(BINDIR) $(INCDIR) $(LIBDIR); do if [ ! -d $$dir ]; then mkdir -p $$dir; fi done
+	$(MAKE) -C src
+	$(MAKE) -C tools
 
 include make/integration_tests.mk
 
@@ -34,25 +36,23 @@ info:
 	@echo
 
 install: all
-	@if [ ! -d $(PREFIX)/bin ]; then mkdir -p $(PREFIX)/bin; fi
-	@if [ ! -d $(PREFIX)/include ]; then mkdir -p $(PREFIX)/include; fi
-	@if [ ! -d $(PREFIX)/lib ]; then mkdir -p $(PREFIX)/lib; fi
+	@echo
+	@echo Setting up install directory in $(PREFIX)
+	@echo
+	if [ ! -d $(PREFIX)/bin ]; then mkdir -p $(PREFIX)/bin; fi
+	if [ ! -d $(PREFIX)/include/treegatherv ]; then mkdir -p $(PREFIX)/include/treegatherv; fi
+	if [ ! -d $(PREFIX)/lib ]; then mkdir -p $(PREFIX)/lib; fi
 	install $(BUILDDIR)/bin/$(BIN_NAME_SHORT).bin $(PREFIX)/bin/
 	install $(BUILDDIR)/bin/bench.bin $(PREFIX)/bin/
-	@if [ ! -z "$(MAKE_SHARED)" ]; then \
-		$(CC) $(SHAREDFLAGS) $(BUILDDIR)/tree_async_persistent.o $(BUILDDIR)/tree_math.o; \
+	if [ ! -z "$(MAKE_SHARED)" ]; then \
+		$(CC) $(SHAREDFLAGS) $(BUILDDIR)/*.o; \
 	fi
-	echo "#ifndef _MPI_TREEGATHERV_H_" > $(PUBLIC_HEADER)
-	echo "#define _MPI_TREEGATHERV_H_" >> $(PUBLIC_HEADER)
-	awk '/tree_async_persistent_gatherv/{while(index($$0, ")")==0){print; getline;}print}' \
-		$(INCDIR)/tree_gather.h >> $(PUBLIC_HEADER)
-	echo "#endif" >> $(PUBLIC_HEADER)
-	ar cr "$(BUILDDIR)/lib/$(BIN_NAME_SHORT).a" $(BUILDDIR)/tree_async_persistent.o $(BUILDDIR)/tree_math.o
-	cp $(PUBLIC_HEADER) $(PREFIX)/include
+	ar cr "$(BUILDDIR)/lib/$(BIN_NAME_SHORT).a" $(BUILDDIR)/*.o
+	cp $(INCDIR)/* $(PREFIX)/include/treegatherv
 	cp $(BUILDDIR)/lib/* $(PREFIX)/lib/
 	
 	
 
 clean:
-	@rm -rf $(BUILDDIR)
-	@$(MAKE) -C src clean
+	rm -rf $(BUILDDIR)
+	$(MAKE) -C src clean

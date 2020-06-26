@@ -1,4 +1,4 @@
-#include "tree_gather.h"
+#include "treegatherv.h"
 
 /*
  * parameter reqs must have allocated enough space
