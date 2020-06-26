@@ -1,12 +1,13 @@
 
 include make/defaults.mk
 include make/vars.mk
-include make/integration_tests.mk
 
 all: info
 	@for dir in $(BUILDDIR) $(BINDIR) $(INCDIR) $(LIBDIR); do if [ ! -d $$dir ]; then mkdir -p $$dir; fi done
 	@$(MAKE) -C src
 	@$(MAKE) -C tools
+
+include make/integration_tests.mk
 
 info:
 	@printf 'BUILD_TYPE\t\t= $(BUILD_TYPE)'
@@ -36,7 +37,7 @@ install: all
 	@if [ ! -d $(PREFIX)/bin ]; then mkdir -p $(PREFIX)/bin; fi
 	@if [ ! -d $(PREFIX)/include ]; then mkdir -p $(PREFIX)/include; fi
 	@if [ ! -d $(PREFIX)/lib ]; then mkdir -p $(PREFIX)/lib; fi
-	install $(BUILDDIR)/bin/treegather.bin $(PREFIX)/bin/
+	install $(BUILDDIR)/bin/$(BIN_NAME_SHORT).bin $(PREFIX)/bin/
 	install $(BUILDDIR)/bin/bench.bin $(PREFIX)/bin/
 	@if [ ! -z "$(MAKE_SHARED)" ]; then \
 		$(CC) $(SHAREDFLAGS) $(BUILDDIR)/tree_async_persistent.o $(BUILDDIR)/tree_math.o; \

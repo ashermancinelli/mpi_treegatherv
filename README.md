@@ -8,32 +8,68 @@ A tree-based gathering function to reduce cost of a gatherv call. Please find th
 ## Dependencies
 
 So far just tested on:
-- Red Hat Enterprise Linux Workstation release 6.6 (Santiago)
-- GCC       >= 7.3.0
-- OpenMPI   >= 3.1.0
+- OS
+    - Red Hat Enterprise Linux Workstation release 6.6 (Santiago)
+    - Red Hat Enterprise Linux Server release 7.6 (Santiago)
+    - Ubuntu 18.04.4 LTS (Bionic Beaver)
+    - CentOS Linux 7 (Core)
+    - OSX Catalina 10.15.5
+- Arch
+    - IBM Power9 ppc64le
+    - x86_64
+- Compiler
+    - GCC
+        - 7.1.0
+        - 7.3.0
+        - 7.4.0
+        - 7.5.0
+        - 8.1.0
+    - Intel
+        - 17.0.1
+        - 17.0.4
+        - 18.0.0
+        - 19.0.3
+- MPI
+    - OpenMPI
+        - 3.0.1
+        - 3.1.0
+        - 3.1.3
+        - 3.1.5
+        - 4.0.1
+    - Intel
+        - 4.1.3.048
+        - 5.0.1.035
+        - 5.0.2.044
+        - 5.1.3.181
 
 ## Installation
 
+For an optimized build with no help messages in the binaries:
 ```console
-$ export BUILD_TYPE=release MAKE_SHARED=1 PREFIX=/path/to/installation
-$ make -j4 check install
+$ make BUILD_TYPE=release PREFIX=/path/to/installation -j4 check install
 ```
 
-This should give you an installation with the public header, shared and static libraries, and the optimized binary both for the benchmarking utility and the driver:
-
+For an unoptimized debug build with a helpful CLI:
 ```console
+$ make BUILD_TYPE=debug PREFIX=/path/to/installation -j4 check install
+```
+You may also set `VERBOSE_OUTPUT=1` for extra debugging information.
+
+For a full installation with the public header, shared and static libraries, and the optimized binary both for the benchmarking utility and the driver:
+```console
+$ make BUILD_TYPE=release PREFIX=$(pwd)/install MAKE_SHARED=1 -j4 check install
 $ ls -R install/
 install/:
 bin  include  lib
 
 install/bin:
-bench.bin  treegather.bin
+bench.bin  treegatherv.bin
 
 install/include:
 treegatherv.h
 
 install/lib:
-treegather.a  treegather.so
+treegatherv.a  treegatherv.so
 ```
 
 ## Testing
