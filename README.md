@@ -15,19 +15,42 @@ So far just tested on:
 ## Installation
 
 ```console
-$ make check
-$ make install PREFIX=/some/dir
+$ export BUILD_TYPE=release MAKE_SHARED=1 PREFIX=/path/to/installation
+$ make -j4 check install
+```
+
+This should give you an installation with the public header, shared and static libraries, and the optimized binary both for the benchmarking utility and the driver:
+
+```console
+$ ls -R install/
+install/:
+bin  include  lib
+
+install/bin:
+bench.bin  treegather.bin
+
+install/include:
+treegatherv.h
+
+install/lib:
+treegather.a  treegather.so
 ```
 
 ## Testing
 
-Results of testing the synchronous tree-based algorithm,
-`tree_gatherv_d`, showed minor
-improvements, but would need more rigerous testing to ensure a 
-worthwhile speedup.
+You may run the full suite of unit tests and integration tests with `make check`, or you may run the driver directly.
+The driver has the following options:
 
-The asynchronous version of the gatherv function however, `tree_gatherv_d_async`,
-showed very significant speedups.
+```console
+$ ./build/bin/treegather.bin --help
+Usage:
+    --gather-method      (mpi|my-mpi|tree|itree)
+    --output-file        <filename or blank for stdout>
+    --display-buf        Display buffers before/after run
+    --data-per-node      <int>
+    --num-loops          <int>
+    --persistent         Use persistent communication
+```
 
-To see tests, run `make check`.
-
+Please note that all utilities are disabled when building in release mode.
+You will not be able to get the help message when building in release mode, so you'll have to play with the options in debug mode first.
