@@ -3,7 +3,7 @@ Tree-based MPI GatherV implementation
 
 [![Build Status](https://travis-ci.org/ashermancinelli/mpi_treegatherv.svg?branch=master)](https://travis-ci.org/ashermancinelli/mpi_treegatherv)
 
-A tree-based gathering function to reduce cost of a gatherv call
+A tree-based gathering function to reduce cost of a gatherv call. Please find the readme in the source directory, and the header in `src/lib/tree_gather.h` for more information about the algorithm.
 
 ## Dependencies
 
